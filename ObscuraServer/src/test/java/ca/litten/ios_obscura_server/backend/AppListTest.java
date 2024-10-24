@@ -1,4 +1,4 @@
-package ca.ios_obscura_server.backend;
+package ca.litten.ios_obscura_server.backend;
 
 import ca.litten.ios_obscura_server.backend.App;
 import org.junit.*;

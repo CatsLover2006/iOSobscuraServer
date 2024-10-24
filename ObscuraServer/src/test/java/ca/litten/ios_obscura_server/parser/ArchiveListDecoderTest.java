@@ -1,4 +1,4 @@
-package ca.ios_obscura_server.parser;
+package ca.litten.ios_obscura_server.parser;
 
 import ca.litten.ios_obscura_server.parser.ArchiveListDecoder;
 import org.junit.Test;
