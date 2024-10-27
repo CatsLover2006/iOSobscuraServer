@@ -208,14 +208,14 @@ public class Server {
                 return;
             }
             outgoingHeaders.set("Content-Type", "text/xml");
-            String[] versions = app.getUrlsForVersion(splitURI[3]);
+            App.VersionLink[] versions = app.getLinksForVersion(splitURI[3]);
             NSDictionary root = new NSDictionary();
             NSDictionary item = new NSDictionary();
             NSDictionary[] asset = new NSDictionary[2];
             NSDictionary metadata = new NSDictionary();
             asset[0] = new NSDictionary();
             asset[0].put("kind", "software-package");
-            asset[0].put("url", versions[Integer.parseInt(splitURI[4])]);
+            asset[0].put("url", versions[Integer.parseInt(splitURI[4])].getUrl());
             asset[1] = new NSDictionary();
             asset[1].put("kind", "display-image");
             asset[1].put("needs-shine", false);
