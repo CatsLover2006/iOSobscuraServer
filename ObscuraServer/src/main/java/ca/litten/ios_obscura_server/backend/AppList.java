@@ -33,7 +33,7 @@ public class AppList {
                     LinkedList<App.VersionLink> versionLinks = new LinkedList<>();
                     for (Object objectStd : array) {
                         JSONObject object = (JSONObject) objectStd;
-                        versionLinks.add(new App.VersionLink(Binary.fromJSON(object.getJSONObject("bin")), object.getString("url")));
+                        versionLinks.add(new App.VersionLink(Binary.fromJSON(object.getJSONObject("bin")), object.getString("url"), object.getLong("fs")));
                     }
                     app.addAppVersionNoSort(versionJSON.getString("ver"),
                             versionLinks.toArray(new App.VersionLink[]{}),

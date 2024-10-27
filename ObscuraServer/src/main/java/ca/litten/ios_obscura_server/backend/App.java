@@ -12,16 +12,19 @@ public class App {
     public static class VersionLink {
         private final Binary binary;
         private final String url;
+        private final long size;
         
-        public VersionLink(Binary binary, String url) {
+        public VersionLink(Binary binary, String url, long size) {
             this.binary = binary;
             this.url = url;
+            this.size = size;
         }
         
         public JSONObject toJSON() {
             JSONObject object = new JSONObject();
             object.put("url", url);
             object.put("bin", binary.toJSON());
+            object.put("fs", size);
             return object;
         }
         
@@ -31,6 +34,19 @@ public class App {
         
         public Binary getBinary() {
             return binary;
+        }
+        
+        public String getSize() {
+            char[] prefixes = new char[]{'k', 'M', 'G', 'T'};
+            int prefixIndex = -1;
+            while ((size / Math.pow(1024, prefixIndex + 1)) >= 1024) {
+                prefixIndex++;
+            }
+            if (prefixIndex == -1) {
+                return size + " B";
+            }
+            char prefix = prefixes[prefixIndex];
+            return (Math.round(Math.floor(size / Math.pow(1024, prefixIndex)) / 102.4) / 10.0) + (prefix + "B");
         }
     }
     

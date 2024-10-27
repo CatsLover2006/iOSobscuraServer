@@ -275,7 +275,8 @@ public class Server {
                 }
                 out.deleteCharAt(out.length() - 2);
                 out.append("</label><fieldset><a href=\"").append(versions[i].getUrl())
-                        .append("\"><div><div>Direct Download</div></div></a>");
+                        .append("\"><div><div>Direct Download <small style=\"font-size:x-small\">").append(versions[i].getSize())
+                        .append("</small></div></div></a>");
                 if (userAgent.contains("iPhone OS") || userAgent.contains("iPad") || userAgent.contains("Macintosh"))
                     out.append("<a href=\"itms-services://?action=download-manifest&url=https://").append(serverName)
                             .append("/generateInstallManifest/").append(splitURI[2]).append("/").append(splitURI[3]).append("/").append(i)

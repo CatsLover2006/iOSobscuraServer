@@ -3,19 +3,11 @@ package ca.litten.ios_obscura_server.parser;
 import ca.litten.ios_obscura_server.backend.App;
 import ca.litten.ios_obscura_server.backend.AppList;
 import com.dd.plist.NSDictionary;
-import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import org.json.JSONObject;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -29,6 +21,7 @@ public class AppDownloader {
                 System.err.println("Not found");
                 return;
             }
+            long size = connection.getContentLengthLong();
             String appName = "";
             String bundleID = "";
             String version = "0.0";
@@ -160,7 +153,7 @@ public class AppDownloader {
             }
             app.updateArtwork(version, artwork);
             app.updateDeveloper(version, developer);
-            app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString())}, minimumVersion);
+            app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString(), size)}, minimumVersion);
         } catch (Throwable e) {
             System.err.println(e);
         }
