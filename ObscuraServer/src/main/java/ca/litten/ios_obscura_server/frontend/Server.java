@@ -261,7 +261,7 @@ public class Server {
                     out.append(", ").append(versions[i].getUrl().split("//")[1].split("/")[2]);
                 if (versions[i].getUrl().startsWith("https"))
                     out.append(", SSL");
-                out.append("</label><label>Supports: ");
+                out.append("<br>Supports: ");
                 HashMap<CPUarch, Boolean> supportMatrix = versions[i].getBinary().getEncryptionMatrix();
                 if (supportMatrix.keySet().isEmpty()) {
                     out.append("None?,");
