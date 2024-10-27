@@ -8,15 +8,11 @@ import com.google.common.escape.Escaper;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
@@ -103,9 +99,26 @@ public class Main {
     }
     
     private static Server server;
+    private static File databaseLocation;
     
     public static void main(String[] args) {
-        AppList.loadAppDatabaseFile(new File("db.json"));
+        try {
+            File file = new File("config.json");
+            FileReader reader = new FileReader(file);
+            StringBuilder out = new StringBuilder();
+            char[] buf = new char[4096];
+            int read;
+            while (reader.ready()) {
+                read = reader.read(buf);
+                for (int i = 0; i < read; i++)
+                    out.append(buf[i]);
+            }
+            JSONObject object = new JSONObject(out.toString());
+            databaseLocation = new File(object.getString("database_location"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        AppList.loadAppDatabaseFile(databaseLocation);
         try {
             server = new Server();
         } catch (IOException e) {
@@ -122,11 +135,11 @@ public class Main {
                         Thread.sleep(1000 * 60 * 2);
                     } catch (InterruptedException e) {
                         System.out.println("Saving database...");
-                        AppList.saveAppDatabaseFile(new File("db.json"));
+                        AppList.saveAppDatabaseFile(databaseLocation);
                         break;
                     }
                     System.out.println("Saving database...");
-                    AppList.saveAppDatabaseFile(new File("db.json"));
+                    AppList.saveAppDatabaseFile(databaseLocation);
                 }
                 System.out.println("Finished parsing!");
             }
