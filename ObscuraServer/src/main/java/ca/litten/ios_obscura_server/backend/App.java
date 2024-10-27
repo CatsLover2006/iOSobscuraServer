@@ -1,5 +1,6 @@
 package ca.litten.ios_obscura_server.backend;
 
+import ca.litten.ios_obscura_server.parser.Binary;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -8,27 +9,68 @@ import java.util.stream.Collectors;
 
 public class App {
     
+    public static class VersionLink {
+        private final Binary binary;
+        private final String url;
+        private final long size;
+        
+        public VersionLink(Binary binary, String url, long size) {
+            this.binary = binary;
+            this.url = url;
+            this.size = size;
+        }
+        
+        public JSONObject toJSON() {
+            JSONObject object = new JSONObject();
+            object.put("url", url);
+            object.put("bin", binary.toJSON());
+            object.put("fs", size);
+            return object;
+        }
+        
+        public String getUrl() {
+            return url;
+        }
+        
+        public Binary getBinary() {
+            return binary;
+        }
+        
+        public String getSize() {
+            char[] prefixes = new char[]{'k', 'M', 'G', 'T'};
+            int prefixIndex = -1;
+            while ((size / Math.pow(1024, prefixIndex + 1)) >= 1024) {
+                prefixIndex++;
+            }
+            if (prefixIndex == -1) {
+                return size + " B";
+            }
+            char prefix = prefixes[prefixIndex];
+            return (Math.round(Math.floor(size / Math.pow(1024, prefixIndex)) / 102.4) / 10.0) + (prefix + "B");
+        }
+    }
+    
     private static class Version {
         private final String version;
-        private String[] urls;
+        private VersionLink[] links;
         private String supportedVersion;
         
-        public Version(String version, String[] urls, String supportedVersion) {
+        public Version(String version, VersionLink[] links, String supportedVersion) {
             this.version = version;
-            this.urls = urls;
+            this.links = links;
             this.supportedVersion = supportedVersion;
         }
         
         @Override
         public int hashCode() {
-            return Objects.hash(version, Arrays.hashCode(urls), supportedVersion);
+            return Objects.hash(version, Arrays.hashCode(links), supportedVersion);
         }
         
-        public void addUrl(String url) {
-            if (Arrays.stream(urls).noneMatch(url::equals)) {
-                List<String> urlList = Arrays.stream(urls).collect(Collectors.toList());
+        public void addUrl(VersionLink url) {
+            if (Arrays.stream(links).noneMatch(url::equals)) {
+                List<VersionLink> urlList = Arrays.stream(links).collect(Collectors.toList());
                 urlList.add(url);
-                urls = urlList.toArray(new String[]{});
+                links = urlList.toArray(new VersionLink[]{});
             }
         }
     }
@@ -85,14 +127,14 @@ public class App {
         versions = new ArrayList<>();
     }
     
-    public void addAppVersionNoSort(String version, String[] urls, String supportedVersion) {
+    public void addAppVersionNoSort(String version, VersionLink[] urls, String supportedVersion) {
         if (isVersionLater(supportedVersion, earliestSupportedVersion))
             earliestSupportedVersion = supportedVersion;
         for (Version otherVersion : versions) {
             if (otherVersion.version.equals(version)) {
                 if (isVersionLater(supportedVersion, otherVersion.supportedVersion))
                     otherVersion.supportedVersion = supportedVersion;
-                for (String url : urls)
+                for (VersionLink url : urls)
                     otherVersion.addUrl(url);
                 return;
             }
@@ -120,12 +162,12 @@ public class App {
         versions.sort((o1, o2) -> {
             if (o1 == null) return -1;
             if (o2 == null) return 1;
-            if (o1.version.equals(o2.version)) return o1.urls[0].compareTo(o2.urls[0]);
+            if (o1.version.equals(o2.version)) return o1.links[0].url.compareTo(o2.links[0].url);
             return (isVersionLater(o1.version, o2.version)) ? -1 : 1;
         });
     }
     
-    public void addAppVersion(String version, String[] urls, String supportedVersion) {
+    public void addAppVersion(String version, VersionLink[] urls, String supportedVersion) {
         addAppVersionNoSort(version, urls, supportedVersion);
         sortVersions();
     }
@@ -196,8 +238,8 @@ public class App {
             versionJSON.put("ver", version.version);
             versionJSON.put("support", version.supportedVersion);
             JSONArray urls = new JSONArray();
-            for (String url : version.urls) {
-                urls.put(url);
+            for (VersionLink url : version.links) {
+                urls.put(url.toJSON());
             }
             versionJSON.put("urls", urls);
             versionArray.put(versionJSON);
@@ -214,16 +256,25 @@ public class App {
     public String[] getUrlsForVersion(String version) {
         for (Version v : versions) {
             if (v.version.equals(version)) {
-                return v.urls;
+                return (String[]) Arrays.stream(v.links).map(link -> link.url).toArray();
             }
         }
         return new String[]{};
     }
     
+    public VersionLink[] getLinksForVersion(String version) {
+        for (Version v : versions) {
+            if (v.version.equals(version)) {
+                return v.links;
+            }
+        }
+        return new VersionLink[]{};
+    }
+    
     public List<String> getAllUrls() {
         LinkedList<String> list = new LinkedList<>();
         for (Version v : versions) {
-            list.addAll(Arrays.asList(v.urls));
+            list.addAll(Arrays.stream(v.links).map(link -> link.url).collect(Collectors.toList()));
         }
         return list;
     }

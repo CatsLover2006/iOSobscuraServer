@@ -2,6 +2,7 @@ package ca.litten.ios_obscura_server.frontend;
 
 import ca.litten.ios_obscura_server.backend.App;
 import ca.litten.ios_obscura_server.backend.AppList;
+import ca.litten.ios_obscura_server.parser.CPUarch;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.sun.net.httpserver.Headers;
@@ -14,6 +15,8 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -251,15 +254,29 @@ public class Server {
                     .append("</div></div><div><div style=\"overflow:auto\">Version ").append(splitURI[3])
                     .append("<span style=\"float:right\">Requires iOS ").append(app.getCompatibleVersion(splitURI[3]))
                     .append("</span></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
-            String[] versions = app.getUrlsForVersion(splitURI[3]);
+            App.VersionLink[] versions = app.getLinksForVersion(splitURI[3]);
             for (int i = 0; i < versions.length; i++) {
-                out.append("<label>#").append(i + 1).append(", ").append(versions[i].split("//")[1].split("/")[0]);
-                if (versions[i].split("//")[1].split("/")[0].contains("archive.org"))
-                    out.append(", ").append(versions[i].split("//")[1].split("/")[2]);
-                if (versions[i].startsWith("https"))
+                out.append("<label>#").append(i + 1).append(", ").append(versions[i].getUrl().split("//")[1].split("/")[0]);
+                if (versions[i].getUrl().split("//")[1].split("/")[0].contains("archive.org"))
+                    out.append(", ").append(versions[i].getUrl().split("//")[1].split("/")[2]);
+                if (versions[i].getUrl().startsWith("https"))
                     out.append(", SSL");
-                out.append("</label><fieldset><a href=\"").append(versions[i])
-                        .append("\"><div><div>Direct Download</div></div></a>");
+                out.append("</label><label>Supports: ");
+                HashMap<CPUarch, Boolean> supportMatrix = versions[i].getBinary().getEncryptionMatrix();
+                if (supportMatrix.keySet().isEmpty()) {
+                    out.append("None?,");
+                }
+                for (CPUarch arch : supportMatrix.keySet()) {
+                    out.append(arch.name());
+                    if (supportMatrix.get(arch)) {
+                        out.append(" (Encrypted)");
+                    }
+                    out.append(", ");
+                }
+                out.deleteCharAt(out.length() - 2);
+                out.append("</label><fieldset><a href=\"").append(versions[i].getUrl())
+                        .append("\"><div><div>Direct Download <small style=\"font-size:x-small\">").append(versions[i].getSize())
+                        .append("</small></div></div></a>");
                 if (userAgent.contains("iPhone OS") || userAgent.contains("iPad") || userAgent.contains("Macintosh"))
                     out.append("<a href=\"itms-services://?action=download-manifest&url=https://").append(serverName)
                             .append("/generateInstallManifest/").append(splitURI[2]).append("/").append(splitURI[3]).append("/").append(i)

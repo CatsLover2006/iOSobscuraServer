@@ -3,18 +3,11 @@ package ca.litten.ios_obscura_server.parser;
 import ca.litten.ios_obscura_server.backend.App;
 import ca.litten.ios_obscura_server.backend.AppList;
 import com.dd.plist.NSDictionary;
-import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
-import org.xml.sax.SAXException;
+import org.json.JSONObject;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -28,6 +21,7 @@ public class AppDownloader {
                 System.err.println("Not found");
                 return;
             }
+            long size = connection.getContentLengthLong();
             String appName = "";
             String bundleID = "";
             String version = "0.0";
@@ -38,15 +32,10 @@ public class AppDownloader {
             ZipInputStream zipExtractor = new ZipInputStream(connection.getInputStream());
             ZipEntry entry = zipExtractor.getNextEntry();
             boolean foundOther = false;
-            InputStream entryReader = new InputStream() {
-                @Override
-                public int read() throws IOException {
-                    return zipExtractor.read();
-                }
-            };;
+            String binaryName = "";
             while (entry != null) {
                 if (entry.getName().endsWith(".app/Info.plist")) {
-                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(entryReader);
+                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
                             case "CFBundleDisplayName": {
@@ -72,6 +61,12 @@ public class AppDownloader {
                                 minimumVersion = str;
                                 break;
                             }
+                            case "CFBundleExecutable": {
+                                String str = String.valueOf(parsedData.get("CFBundleExecutable"));
+                                if (str.equals("null")) break;
+                                binaryName = str;
+                                break;
+                            }
                         }
                     }
                     if (foundOther) {
@@ -80,7 +75,7 @@ public class AppDownloader {
                     foundOther = true;
                 }
                 if (entry.getName().endsWith("iTunesMetadata.plist")) {
-                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(entryReader);
+                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
                             case "softwareVersionBundleId": {
@@ -123,6 +118,31 @@ public class AppDownloader {
                 }
                 entry = zipExtractor.getNextEntry();
             }
+            Binary binary = null;
+            if (!binaryName.isEmpty()) {
+                while (entry != null) {
+                    if (entry.getName().endsWith("/" + binaryName)) {
+                        binary = Binary.parseBinary(zipExtractor);
+                        break;
+                    }
+                    entry = zipExtractor.getNextEntry();
+                }
+                if (binary == null) {
+                    connection.disconnect();
+                    connection = (HttpURLConnection) url.openConnection();
+                    zipExtractor = new ZipInputStream(connection.getInputStream());
+                    entry = zipExtractor.getNextEntry();
+                    while (entry != null) {
+                        if (entry.getName().endsWith("/" + binaryName)) {
+                            binary = Binary.parseBinary(zipExtractor);
+                            break;
+                        }
+                        entry = zipExtractor.getNextEntry();
+                    }
+                }
+            } else {
+                binary = Binary.fromJSON(new JSONObject());
+            }
             App app = AppList.getAppByBundleID(bundleID);
             if (app == null) {
                 app = new App(appName, bundleID);
@@ -133,7 +153,7 @@ public class AppDownloader {
             }
             app.updateArtwork(version, artwork);
             app.updateDeveloper(version, developer);
-            app.addAppVersion(version, new String[]{url.toString()}, minimumVersion);
+            app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString(), size)}, minimumVersion);
         } catch (Throwable e) {
             System.err.println(e);
         }
