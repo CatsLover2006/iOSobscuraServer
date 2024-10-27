@@ -1,13 +1,11 @@
 package ca.litten.ios_obscura_server.backend;
 
+import ca.litten.ios_obscura_server.parser.Binary;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AppList {
@@ -31,8 +29,14 @@ public class AppList {
                 App app = new App(appJSON.getString("name"), appJSON.getString("bundle"));
                 for (Object versionObject : appJSON.getJSONArray("versions")) {
                     JSONObject versionJSON = (JSONObject) versionObject;
+                    JSONArray array = versionJSON.getJSONArray("urls");
+                    LinkedList<App.VersionLink> versionLinks = new LinkedList<>();
+                    for (Object objectStd : array) {
+                        JSONObject object = (JSONObject) objectStd;
+                        versionLinks.add(new App.VersionLink(Binary.fromJSON(object.getJSONObject("bin")), object.getString("url")));
+                    }
                     app.addAppVersionNoSort(versionJSON.getString("ver"),
-                            versionJSON.getJSONArray("urls").toList().toArray(new String[]{}),
+                            versionLinks.toArray(new App.VersionLink[]{}),
                             versionJSON.getString("support"));
                 }
                 app.updateArtwork(appJSON.getString("artver"), appJSON.getString("art"));

@@ -1,16 +1,15 @@
 package ca.litten.ios_obscura_server.parser;
 
 import org.apache.commons.io.IOUtils;
-import org.checkerframework.checker.units.qual.C;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Map;
 
 public class Binary {
     
-    private HashMap<CPUarch, Boolean> encryptionMatrix;
+    private final HashMap<CPUarch, Boolean> encryptionMatrix;
     
     protected Binary() {
         encryptionMatrix = new HashMap<>();
@@ -23,6 +22,10 @@ public class Binary {
     public boolean architectureEncrypted(CPUarch arch) {
         if (!encryptionMatrix.containsKey(arch)) return false;
         return encryptionMatrix.get(arch);
+    }
+    
+    public HashMap<CPUarch, Boolean> getEncryptionMatrix() {
+        return encryptionMatrix;
     }
     
     public static Binary parseBinary(InputStream binaryStream) throws IOException {
@@ -73,7 +76,7 @@ public class Binary {
                 if (binaryStream.read() != 0xfa) return null;
                 if (binaryStream.read() != 0xed) return null;
                 if (binaryStream.read() != 0xfe) return null;
-                System.out.println("64-bit binary found!");
+                //System.out.println("64-bit binary found!");
                 binaryStream.read(bytes);
                 cpuArchMain = 0;
                 for (byte bit : bytes) {
@@ -91,7 +94,7 @@ public class Binary {
                         break;
                     }
                 }
-                System.out.println("This binary is for " + arch.name());
+                //System.out.println("This binary is for " + arch.name());
                 binary.encryptionMatrix.put(arch, false);
                 binaryStream.read(bytes); // File type (irrelevant)
                 binaryStream.read(bytes); // Load command count
@@ -120,7 +123,7 @@ public class Binary {
                             workingValue = (workingValue >> 8) + (bit & 0xFF) * 0x01000000;
                         }
                         if (workingValue == 0) continue;
-                        System.out.println("Binary has encrypted segment.");
+                        //System.out.println("Binary has encrypted segment.");
                         binary.encryptionMatrix.put(arch, true);
                         return binary;
                     }
@@ -131,7 +134,7 @@ public class Binary {
                 if (binaryStream.read() != 0xfa) return null;
                 if (binaryStream.read() != 0xed) return null;
                 if (binaryStream.read() != 0xfe) return null;
-                System.out.println("32-bit binary found!");
+                //System.out.println("32-bit binary found!");
                 binaryStream.read(bytes);
                 cpuArchMain = 0;
                 for (byte bit : bytes) {
@@ -149,7 +152,7 @@ public class Binary {
                         break;
                     }
                 }
-                System.out.println("This binary is for " + arch.name());
+                //System.out.println("This binary is for " + arch.name());
                 binary.encryptionMatrix.put(arch, false);
                 binaryStream.read(bytes); // File type (irrelevant)
                 binaryStream.read(bytes); // Load command count
@@ -177,7 +180,7 @@ public class Binary {
                             workingValue = (workingValue >> 8) + (bit & 0xFF) * 0x01000000;
                         }
                         if (workingValue == 0) continue;
-                        System.out.println("Binary has encrypted segment.");
+                        //System.out.println("Binary has encrypted segment.");
                         binary.encryptionMatrix.put(arch, true);
                         return binary;
                     }
@@ -193,7 +196,7 @@ public class Binary {
                 for (byte bit : bytes) {
                     numberBinaries = (numberBinaries << 8) + (bit & 0xFF);
                 }
-                System.out.println(numberBinaries + " binaries found in multi-architecture binary.");
+                //System.out.println(numberBinaries + " binaries found in multi-architecture binary.");
                 HashMap<CPUarch, Integer> fileOffsetMatrix = new HashMap<>();
                 int fileOffset;
                 for (int i = 0; i < numberBinaries; i++) {
@@ -220,7 +223,7 @@ public class Binary {
                             break;
                         }
                     }
-                    System.out.println(arch.name() + " binary at " + fileOffset);
+                    //System.out.println(arch.name() + " binary at " + fileOffset);
                     binaryStream.read(bytes); // Size
                     binaryStream.read(bytes); // Alignment
                     fileOffsetMatrix.put(arch, fileOffset);
@@ -235,5 +238,21 @@ public class Binary {
             }
         }
         return null;
+    }
+    
+    public JSONObject toJSON() {
+        JSONObject object = new JSONObject();
+        for (CPUarch arch : encryptionMatrix.keySet()) {
+            object.put(arch.name(), encryptionMatrix.get(arch));
+        }
+        return object;
+    }
+    
+    public static Binary fromJSON(JSONObject json) {
+        Binary binary = new Binary();
+        for (String key : json.keySet()) {
+            binary.encryptionMatrix.put(CPUarch.valueOf(key), json.getBoolean(key));
+        }
+        return binary;
     }
 }

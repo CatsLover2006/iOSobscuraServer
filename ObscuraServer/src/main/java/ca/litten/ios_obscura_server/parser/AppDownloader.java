@@ -5,6 +5,7 @@ import ca.litten.ios_obscura_server.backend.AppList;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
+import org.json.JSONObject;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,6 +39,7 @@ public class AppDownloader {
             ZipInputStream zipExtractor = new ZipInputStream(connection.getInputStream());
             ZipEntry entry = zipExtractor.getNextEntry();
             boolean foundOther = false;
+            String binaryName = "";
             while (entry != null) {
                 if (entry.getName().endsWith(".app/Info.plist")) {
                     NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
@@ -64,6 +66,12 @@ public class AppDownloader {
                                 String str = String.valueOf(parsedData.get("MinimumOSVersion"));
                                 if (str.equals("null")) break;
                                 minimumVersion = str;
+                                break;
+                            }
+                            case "CFBundleExecutable": {
+                                String str = String.valueOf(parsedData.get("CFBundleExecutable"));
+                                if (str.equals("null")) break;
+                                binaryName = str;
                                 break;
                             }
                         }
@@ -117,6 +125,31 @@ public class AppDownloader {
                 }
                 entry = zipExtractor.getNextEntry();
             }
+            Binary binary = null;
+            if (!binaryName.isEmpty()) {
+                while (entry != null) {
+                    if (entry.getName().endsWith("/" + binaryName)) {
+                        binary = Binary.parseBinary(zipExtractor);
+                        break;
+                    }
+                    entry = zipExtractor.getNextEntry();
+                }
+                if (binary == null) {
+                    connection.disconnect();
+                    connection = (HttpURLConnection) url.openConnection();
+                    zipExtractor = new ZipInputStream(connection.getInputStream());
+                    entry = zipExtractor.getNextEntry();
+                    while (entry != null) {
+                        if (entry.getName().endsWith("/" + binaryName)) {
+                            binary = Binary.parseBinary(zipExtractor);
+                            break;
+                        }
+                        entry = zipExtractor.getNextEntry();
+                    }
+                }
+            } else {
+                binary = Binary.fromJSON(new JSONObject());
+            }
             App app = AppList.getAppByBundleID(bundleID);
             if (app == null) {
                 app = new App(appName, bundleID);
@@ -127,7 +160,7 @@ public class AppDownloader {
             }
             app.updateArtwork(version, artwork);
             app.updateDeveloper(version, developer);
-            app.addAppVersion(version, new String[]{url.toString()}, minimumVersion);
+            app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString())}, minimumVersion);
         } catch (Throwable e) {
             System.err.println(e);
         }
