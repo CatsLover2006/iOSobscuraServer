@@ -38,15 +38,9 @@ public class AppDownloader {
             ZipInputStream zipExtractor = new ZipInputStream(connection.getInputStream());
             ZipEntry entry = zipExtractor.getNextEntry();
             boolean foundOther = false;
-            InputStream entryReader = new InputStream() {
-                @Override
-                public int read() throws IOException {
-                    return zipExtractor.read();
-                }
-            };;
             while (entry != null) {
                 if (entry.getName().endsWith(".app/Info.plist")) {
-                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(entryReader);
+                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
                             case "CFBundleDisplayName": {
@@ -80,7 +74,7 @@ public class AppDownloader {
                     foundOther = true;
                 }
                 if (entry.getName().endsWith("iTunesMetadata.plist")) {
-                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(entryReader);
+                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
                             case "softwareVersionBundleId": {
