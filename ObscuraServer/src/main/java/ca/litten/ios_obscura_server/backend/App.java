@@ -23,7 +23,9 @@ public class App {
         public JSONObject toJSON() {
             JSONObject object = new JSONObject();
             object.put("url", url);
-            object.put("bin", binary.toJSON());
+            if (binary != null) {
+                object.put("bin", binary.toJSON());
+            }
             object.put("fs", size);
             return object;
         }

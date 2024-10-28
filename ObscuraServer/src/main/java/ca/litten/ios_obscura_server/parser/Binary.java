@@ -249,6 +249,9 @@ public class Binary {
     }
     
     public static Binary fromJSON(JSONObject json) {
+        if (json == null) {
+            return null;
+        }
         Binary binary = new Binary();
         for (String key : json.keySet()) {
             binary.encryptionMatrix.put(CPUarch.valueOf(key), json.getBoolean(key));

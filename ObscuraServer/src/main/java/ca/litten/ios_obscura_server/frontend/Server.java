@@ -261,19 +261,24 @@ public class Server {
                     out.append(", ").append(versions[i].getUrl().split("//")[1].split("/")[2]);
                 if (versions[i].getUrl().startsWith("https"))
                     out.append(", SSL");
-                out.append("<br>Supports: ");
-                HashMap<CPUarch, Boolean> supportMatrix = versions[i].getBinary().getEncryptionMatrix();
-                if (supportMatrix.keySet().isEmpty()) {
-                    out.append("None?,");
-                }
-                for (CPUarch arch : supportMatrix.keySet()) {
-                    out.append(arch.name());
-                    if (supportMatrix.get(arch)) {
-                        out.append(" (Encrypted)");
+                if (versions[i].getBinary() != null) {
+                    HashMap<CPUarch, Boolean> supportMatrix = versions[i].getBinary().getEncryptionMatrix();
+                    if (!supportMatrix.keySet().isEmpty()) {
+                        out.append("<br>Supports: ");
+                        for (CPUarch arch : supportMatrix.keySet()) {
+                            out.append(arch.name());
+                            if (supportMatrix.get(arch)) {
+                                out.append(" (Encrypted)");
+                            }
+                            out.append(", ");
+                        }
+                        out.deleteCharAt(out.length() - 2);
+                    } else {
+                        out.append("<br>Mach-O Error");
                     }
-                    out.append(", ");
+                } else {
+                    out.append("<br>Mach-O Error");
                 }
-                out.deleteCharAt(out.length() - 2);
                 out.append("</label><fieldset><a href=\"").append(versions[i].getUrl())
                         .append("\"><div><div>Direct Download <small style=\"font-size:x-small\">").append(versions[i].getSize())
                         .append("</small></div></div></a>");
