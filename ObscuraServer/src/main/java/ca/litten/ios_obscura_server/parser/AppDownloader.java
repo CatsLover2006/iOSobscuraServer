@@ -34,6 +34,10 @@ public class AppDownloader {
             boolean foundOther = false;
             String binaryName = "";
             while (entry != null) {
+                if (entry.getName().toLowerCase().contains("/watch/")) {
+                    entry = zipExtractor.getNextEntry();
+                    continue;
+                }
                 if (entry.getName().endsWith(".app/Info.plist")) {
                     NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
                     for (String key : parsedData.allKeys()) {
@@ -121,6 +125,10 @@ public class AppDownloader {
             Binary binary = null;
             if (!binaryName.isEmpty()) {
                 while (entry != null) {
+                    if (entry.getName().toLowerCase().contains("/watch/")) {
+                        entry = zipExtractor.getNextEntry();
+                        continue;
+                    }
                     if (entry.getName().endsWith("/" + binaryName)) {
                         binary = Binary.parseBinary(zipExtractor);
                         break;

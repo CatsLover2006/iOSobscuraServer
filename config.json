@@ -5,6 +5,7 @@
     "port": 12345,
     "archive_org_archives": [
         "mactracker-ipa-collection",
+        "Untestedioscollection",
         "apps-ios",
         "virtually-extinct-ipas",
         "ios_2_ipa",
