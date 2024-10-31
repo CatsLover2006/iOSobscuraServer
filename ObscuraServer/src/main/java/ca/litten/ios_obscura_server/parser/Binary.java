@@ -232,6 +232,7 @@ public class Binary {
                     binaryStream.reset();
                     binaryStream.skip(fileOffsetMatrix.get(entry));
                     Binary temp = resetableParseBinary(binaryStream);
+                    if (temp == null) continue;
                     binary.encryptionMatrix.put(entry, temp.architectureEncrypted(entry));
                 }
                 return binary;
