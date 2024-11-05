@@ -22,6 +22,7 @@ public class Main {
     private static class ArchiveParser extends Thread {
         @Override
         public void run() {
+            System.out.println("Starting parser...");
             Escaper escaper = urlPathSegmentEscaper();
             LinkedList<String> urlist = new LinkedList<>();
             FileReader reader = null;
@@ -36,10 +37,12 @@ public class Main {
                         out.append(buf[i]);
                 }
                 JSONObject object = new JSONObject(out.toString());
+                System.out.println("Adding individual files to url list...");
                 for (Object o : object.getJSONArray("network_files")) {
                     urlist.add(o.toString());
                 }
                 for (Object o : object.getJSONArray("archive_org_archives")) {
+                    System.out.println("Adding files in archive.org item " + o.toString() + " to url list...");
                     urlist.addAll(Arrays.asList(ArchiveListDecoder
                             .getUrlListFromArchiveOrgListing(new URL("https://archive.org/download/"
                                     + o.toString() + "/" + o.toString() + "_files.xml"))));
@@ -51,6 +54,7 @@ public class Main {
             Thread[] tasks = new Thread[Runtime.getRuntime().availableProcessors()];
             task = new Thread(() -> {});
             Arrays.fill(tasks, task);
+            System.out.println("Started parser!");
             for (String temp : urlist) {
                 String[] urlfrags = temp.split("/");
                 String url = "";
@@ -102,6 +106,7 @@ public class Main {
     private static File databaseLocation;
     
     public static void main(String[] args) {
+        System.out.println("Loading config...");
         try {
             File file = new File("config.json");
             FileReader reader = new FileReader(file);
@@ -116,15 +121,18 @@ public class Main {
             JSONObject object = new JSONObject(out.toString());
             databaseLocation = new File(object.getString("database_location"));
         } catch (Exception e) {
+            System.out.println("Error occurred while loading config!");
             throw new RuntimeException(e);
         }
         AppList.loadAppDatabaseFile(databaseLocation);
+        System.out.println("Starting server...");
         try {
             server = new Server();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         server.startServer();
+        System.out.println("Started server.");
         while (true) {
             Server.allowReload = false;
             if (Arrays.stream(args).noneMatch(a -> a.equals("--noParse"))) {
