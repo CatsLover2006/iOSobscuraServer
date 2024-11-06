@@ -23,7 +23,7 @@ public class AppDownloader {
             }
             long size = connection.getContentLengthLong();
             String appName = "";
-            String bundleID = "";
+            String bundleID = "nil";
             String version = "0.0";
             String minimumVersion = "0.0";
             String artwork = null;
