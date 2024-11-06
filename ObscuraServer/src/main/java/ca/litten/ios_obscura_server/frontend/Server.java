@@ -105,7 +105,7 @@ public class Server {
             }
             StringBuilder out = new StringBuilder();
             out.append(Templates.generateBasicHeader("iOS Obscura Locator"))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>iPhoneOS Obscura Locator Homepage</strong></center></div></div><div><div><form action=\"searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div></fieldset><label>Some Apps</label><fieldset>");
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>iPhoneOS Obscura Locator Homepage</strong></center></div></div><div><div><form action=\"searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div></fieldset><label>Some Apps</label><fieldset>");
             List<App> apps = AppList.listAppsThatSupportVersion(iOS_ver);
             App app;
             int random;
@@ -125,6 +125,90 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
+        server.createContext("/getCSS/checkType").setHandler(exchange -> {
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            boolean macOS_connection = userAgent.contains("Macintosh");
+            String out = "http://cydia.saurik.com/cytyle/style-3163da6b7950852a03d31ea77735f4e1d2ba6699.css";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                String ver = split2[split2.length - 1].replace("_", ".");
+                if (App.isVersionLater("7.0", ver)) {
+                    out = "http://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
+                }
+            }
+            if (macOS_connection) {
+                String[] split1 = userAgent.split("AppleWebKit");
+                String[] split2 = split1[0].split("\\)")[0].split(" ");
+                String ver = split2[split2.length - 1].replace("_", ".");
+                if (App.isVersionLater("10.10", ver)) {
+                    out = "http://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
+                }
+            }
+            byte[] bytes = out.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
+        server.createContext("/getCSS/insecure").setHandler(exchange -> {
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            boolean macOS_connection = userAgent.contains("Macintosh");
+            String out = "http://cydia.saurik.com/cytyle/style-3163da6b7950852a03d31ea77735f4e1d2ba6699.css";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                String ver = split2[split2.length - 1].replace("_", ".");
+                if (App.isVersionLater("7.0", ver)) {
+                    out = "http://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
+                }
+            }
+            if (macOS_connection) {
+                String[] split1 = userAgent.split("AppleWebKit");
+                String[] split2 = split1[0].split("\\)")[0].split(" ");
+                String ver = split2[split2.length - 1].replace("_", ".");
+                if (App.isVersionLater("10.10", ver)) {
+                    out = "http://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
+                }
+            }
+            outgoingHeaders.set("Location", out);
+            outgoingHeaders.set("Cache-Control", "max-age=172800");
+            exchange.sendResponseHeaders(308, 0);
+            exchange.close();
+        });
+        server.createContext("/getCSS/secure").setHandler(exchange -> {
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            boolean macOS_connection = userAgent.contains("Macintosh");
+            String out = "https://cydia.saurik.com/cytyle/style-3163da6b7950852a03d31ea77735f4e1d2ba6699.css";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                String ver = split2[split2.length - 1].replace("_", ".");
+                if (App.isVersionLater("7.0", ver)) {
+                    out = "https://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
+                }
+            }
+            if (macOS_connection) {
+                String[] split1 = userAgent.split("AppleWebKit");
+                String[] split2 = split1[0].split("\\)")[0].split(" ");
+                String ver = split2[split2.length - 1].replace("_", ".");
+                if (App.isVersionLater("10.10", ver)) {
+                    out = "https://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
+                }
+            }
+            outgoingHeaders.set("Location", out);
+            outgoingHeaders.set("Cache-Control", "max-age=172800");
+            exchange.sendResponseHeaders(308, 0);
             exchange.close();
         });
         server.createContext("/getHeader").setHandler(exchange -> {
@@ -156,7 +240,7 @@ public class Server {
                 outgoingHeaders.set("Location", app.getArtworkURL());
             }
             outgoingHeaders.set("Cache-Control", "max-age=172800");
-            exchange.sendResponseHeaders(302, 0);
+            exchange.sendResponseHeaders(308, 0);
             exchange.close();
         });
         server.createContext("/getAppVersions/").setHandler(exchange -> {
@@ -315,7 +399,7 @@ public class Server {
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("\\?");
             outgoingHeaders.set("Location", "/search/" + splitURI[1].substring(7));
             outgoingHeaders.set("Cache-Control", "max-age=172800");
-            exchange.sendResponseHeaders(302, 0);
+            exchange.sendResponseHeaders(308, 0);
             exchange.close();
         });
         server.createContext("/search").setHandler(exchange -> {
@@ -342,7 +426,7 @@ public class Server {
             out.append(Templates.generateBasicHeader("Search: " + query))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div>")
                     .append("<div><div><form action=\"/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
-                    .append("\" style=\"border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+                    .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
             if (!query.isEmpty()) {
                 out.append("<label>Search Results</label><fieldset>");
                 List<App> apps = AppList.searchApps(query, iOS_ver);
