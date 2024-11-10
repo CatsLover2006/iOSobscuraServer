@@ -177,9 +177,9 @@ public class AppDownloader {
                 }
                 if (!binaryName.isEmpty() && entry.getName().toLowerCase().endsWith("/" + binaryName)) {
                     binary = Binary.parseBinary(zipExtractor);
-                    if (iconImage != null) break;
+                    if (iconImage != null || !artwork.isEmpty()) break;
                 }
-                if (entry.getName().toLowerCase().endsWith("/" + iconName)) {
+                if (artwork.isEmpty() && entry.getName().toLowerCase().endsWith("/" + iconName)) {
                     try {
                         iconImage = ImageIO.read(zipExtractor);
                     } catch (IIOException e) {
@@ -189,7 +189,7 @@ public class AppDownloader {
                 }
                 entry = zipExtractor.getNextEntry();
             }
-            if (binary == null || iconImage == null) {
+            if (binary == null || (artwork.isEmpty() && iconImage == null)) {
                 connection.disconnect();
                 connection = (HttpURLConnection) url.openConnection();
                 zipExtractor = new ZipInputStream(connection.getInputStream());
@@ -201,9 +201,9 @@ public class AppDownloader {
                     }
                     if (!binaryName.isEmpty() && entry.getName().toLowerCase().endsWith("/" + binaryName)) {
                         binary = Binary.parseBinary(zipExtractor);
-                        if (iconImage != null) break;
+                        if (iconImage != null || !artwork.isEmpty()) break;
                     }
-                    if (entry.getName().toLowerCase().endsWith("/" + iconName)) {
+                    if (artwork.isEmpty() && entry.getName().toLowerCase().endsWith("/" + iconName)) {
                         try {
                             iconImage = ImageIO.read(zipExtractor);
                         } catch (IIOException e) {
@@ -214,7 +214,7 @@ public class AppDownloader {
                     entry = zipExtractor.getNextEntry();
                 }
             }
-            if (iconImage == null) {
+            if (artwork.isEmpty() && iconImage == null) {
                 connection.disconnect();
                 connection = (HttpURLConnection) url.openConnection();
                 zipExtractor = new ZipInputStream(connection.getInputStream());
@@ -226,7 +226,7 @@ public class AppDownloader {
                         } catch (IIOException e) {
                             System.err.println("Image error");
                         }
-                        if (binary != null) break;
+                        break;
                     }
                     entry = zipExtractor.getNextEntry();
                 }
