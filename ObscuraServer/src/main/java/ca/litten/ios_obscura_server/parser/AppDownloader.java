@@ -189,7 +189,7 @@ public class AppDownloader {
             } else {
                 binary = Binary.fromJSON(new JSONObject());
             }
-            if (artwork == null) {
+            if (artwork == null && iconImage != null) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 ImageIO.write(iconImage, "jpeg", out);
                 byte[] bytes = out.toByteArray();
