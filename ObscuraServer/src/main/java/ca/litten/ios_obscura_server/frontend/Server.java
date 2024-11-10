@@ -310,6 +310,13 @@ public class Server {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             outgoingHeaders.set("Content-Type", "text/html; charset=utf-8");
             String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            String iOS_ver = "99999999";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                iOS_ver = split2[split2.length - 1].replace("_", ".");
+            }
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
             App app = AppList.getAppByBundleID(splitURI[2]);
             if (app == null) {
@@ -354,10 +361,21 @@ public class Server {
                 out.append("</label><fieldset><a href=\"").append(versions[i].getUrl())
                         .append("\"><div><div>Direct Download <small style=\"font-size:x-small\">").append(versions[i].getSize())
                         .append("</small></div></div></a>");
-                if (userAgent.contains("iPhone OS") || userAgent.contains("iPad") || userAgent.contains("Macintosh"))
+                if (iOS_connection || userAgent.contains("Macintosh"))
                     out.append("<a href=\"itms-services://?action=download-manifest&url=https://").append(serverName)
                             .append("/generateInstallManifest/").append(splitURI[2]).append("/").append(splitURI[3]).append("/").append(i)
-                            .append("\"><div><div>iOS Direct Install <small style=\"font-size:x-small\">Might Not Work</small></div></div></a>");
+                            .append("\"><div><div>iOS Direct Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div></a>");
+                if (iOS_connection) {
+                    if ((App.isVersionLater("14.0", iOS_ver) && App.isVersionLater(iOS_ver, "16.6.1")) || (iOS_ver.startsWith("17.0") && iOS_ver.endsWith(".0")))
+                        out.append("<a href=\"apple-magnifier://install?url=").append(versions[i].getUrl())
+                                .append("\"><div><div>Install with TrollStore</div></div></a>");
+                    if (App.isVersionLater("12.2", iOS_ver))
+                        out.append("<a href=\"altstore://install?url=").append(versions[i].getUrl())
+                                .append("\"><div><div>Install with AltStore</div></div></a>");
+                    if (App.isVersionLater("14.0", iOS_ver))
+                        out.append("<a href=\"sidestore://install?url=").append(versions[i].getUrl())
+                                .append("\"><div><div>Install with SideStore</div></div></a>");
+                }
                 out.append("</fieldset>");
             }
             out.append("</panel></body></html>");
