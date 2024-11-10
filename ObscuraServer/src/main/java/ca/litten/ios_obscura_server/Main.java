@@ -124,6 +124,7 @@ public class Main {
             System.out.println("Error occurred while loading config!");
             throw new RuntimeException(e);
         }
+        System.out.println("Loading database...");
         AppList.loadAppDatabaseFile(databaseLocation);
         System.out.println("Starting server...");
         try {
