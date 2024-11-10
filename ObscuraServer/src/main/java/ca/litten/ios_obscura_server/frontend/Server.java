@@ -1,5 +1,6 @@
 package ca.litten.ios_obscura_server.frontend;
 
+import ca.litten.ios_obscura_server.Main;
 import ca.litten.ios_obscura_server.backend.App;
 import ca.litten.ios_obscura_server.backend.AppList;
 import ca.litten.ios_obscura_server.parser.CPUarch;
@@ -504,7 +505,7 @@ public class Server {
                 exchange.close();
                 return;
             }
-            AppList.loadAppDatabaseFile(new File("db.json"));
+            AppList.loadAppDatabaseFile(Main.databaseLocation);
             exchange.getResponseHeaders().set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, 0);
             exchange.close();

@@ -103,7 +103,7 @@ public class Main {
     }
     
     private static Server server;
-    private static File databaseLocation;
+    public static File databaseLocation;
     
     public static void main(String[] args) {
         if (Arrays.asList(args).contains("--help")) {
