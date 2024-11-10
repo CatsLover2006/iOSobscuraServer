@@ -168,17 +168,18 @@ public class AppDownloader {
             Binary binary = null;
             if (iconName.isEmpty()) iconName = "icon.png"; // Just in cased
             BufferedImage iconImage = null;
-
+            iconName = iconName.toLowerCase();
+            binaryName = binaryName.toLowerCase();
             while (entry != null) {
                 if (entry.getName().toLowerCase().contains("/watch/")) {
                     entry = zipExtractor.getNextEntry();
                     continue;
                 }
-                if (!binaryName.isEmpty() && entry.getName().endsWith("/" + binaryName)) {
+                if (!binaryName.isEmpty() && entry.getName().toLowerCase().endsWith("/" + binaryName)) {
                     binary = Binary.parseBinary(zipExtractor);
                     if (iconImage != null) break;
                 }
-                if (!iconName.isEmpty() && entry.getName().endsWith("/" + iconName)) {
+                if (entry.getName().toLowerCase().endsWith("/" + iconName)) {
                     try {
                         iconImage = ImageIO.read(zipExtractor);
                     } catch (IIOException e) {
@@ -198,11 +199,11 @@ public class AppDownloader {
                         entry = zipExtractor.getNextEntry();
                         continue;
                     }
-                    if (!binaryName.isEmpty() && entry.getName().endsWith("/" + binaryName)) {
+                    if (!binaryName.isEmpty() && entry.getName().toLowerCase().endsWith("/" + binaryName)) {
                         binary = Binary.parseBinary(zipExtractor);
                         if (iconImage != null) break;
                     }
-                    if (!iconName.isEmpty() && entry.getName().endsWith("/" + iconName)) {
+                    if (entry.getName().toLowerCase().endsWith("/" + iconName)) {
                         try {
                             iconImage = ImageIO.read(zipExtractor);
                         } catch (IIOException e) {
@@ -219,7 +220,7 @@ public class AppDownloader {
                 zipExtractor = new ZipInputStream(connection.getInputStream());
                 entry = zipExtractor.getNextEntry();
                 while (entry != null) {
-                    if (!iconName.isEmpty() && entry.getName().endsWith("iTunesArtwork")) {
+                    if (entry.getName().toLowerCase().endsWith("itunesartwork")) {
                         try {
                             iconImage = ImageIO.read(zipExtractor);
                         } catch (IIOException e) {
