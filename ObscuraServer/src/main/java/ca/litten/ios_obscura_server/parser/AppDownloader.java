@@ -37,8 +37,8 @@ public class AppDownloader {
             String bundleID = "nil";
             String version = "0.0";
             String minimumVersion = "0.0";
-            String artwork = null;
-            String developer = null;
+            String artwork = "";
+            String developer = "";
             boolean usesMetaName = false;
             ZipInputStream zipExtractor = new ZipInputStream(connection.getInputStream());
             ZipEntry entry = zipExtractor.getNextEntry();

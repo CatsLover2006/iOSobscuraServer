@@ -165,7 +165,7 @@ public class App {
     }
     
     public void updateDeveloper(String version, String dev) {
-        if (dev == null) return;
+        if (dev == null || dev.isEmpty()) return;
         if (isVersionLater(version, earliestDevVersion)) {
             earliestDevVersion = version;
             developer = dev;
