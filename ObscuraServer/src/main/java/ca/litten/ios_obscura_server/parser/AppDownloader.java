@@ -50,7 +50,7 @@ public class AppDownloader {
                     entry = zipExtractor.getNextEntry();
                     continue;
                 }
-                if (entry.getName().endsWith(".app/Info.plist")) {
+                if (entry.getName().toLowerCase().endsWith(".app/info.plist")) {
                     NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
@@ -121,7 +121,7 @@ public class AppDownloader {
                     }
                     foundOther = true;
                 }
-                if (entry.getName().endsWith("iTunesMetadata.plist")) {
+                if (entry.getName().toLowerCase().endsWith("itunesmetadata.plist")) {
                     NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
