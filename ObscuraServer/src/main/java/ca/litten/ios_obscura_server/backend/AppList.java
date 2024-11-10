@@ -10,8 +10,12 @@ import java.util.stream.Collectors;
 
 public class AppList {
     private static final ArrayList<App> apps = new ArrayList<>();
-    
+
     public static void loadAppDatabaseFile(File file) {
+        loadAppDatabaseFile(file, false);
+    }
+    
+    public static void loadAppDatabaseFile(File file, boolean skipEmptyIcons) {
         try {
             FileReader reader = new FileReader(file);
             StringBuilder out = new StringBuilder();
@@ -26,6 +30,7 @@ public class AppList {
             apps.clear();
             for (Object appObject : appArray) {
                 JSONObject appJSON = (JSONObject) appObject;
+                if (skipEmptyIcons && appJSON.getString("art").isEmpty()) continue;
                 App app = new App(appJSON.getString("name"), appJSON.getString("bundle"));
                 for (Object versionObject : appJSON.getJSONArray("versions")) {
                     JSONObject versionJSON = (JSONObject) versionObject;

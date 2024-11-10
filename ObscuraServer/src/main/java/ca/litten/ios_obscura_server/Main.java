@@ -106,6 +106,12 @@ public class Main {
     private static File databaseLocation;
     
     public static void main(String[] args) {
+        if (Arrays.asList(args).contains("--help")) {
+            System.out.println("--skipNoAppIcon: skips apps with no app icon when loading the database");
+            System.out.println("--noParse: disable app parsing to save RAM");
+            System.out.println("--help: display this message");
+            return;
+        }
         System.out.println("Loading config...");
         try {
             File file = new File("config.json");
@@ -125,7 +131,7 @@ public class Main {
             throw new RuntimeException(e);
         }
         System.out.println("Loading database...");
-        AppList.loadAppDatabaseFile(databaseLocation);
+        AppList.loadAppDatabaseFile(databaseLocation, Arrays.asList(args).contains("--skipNoAppIcon"));
         System.out.println("Starting server...");
         try {
             server = new Server();
