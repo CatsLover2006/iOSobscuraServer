@@ -166,9 +166,33 @@ public class AppDownloader {
                 entry = zipExtractor.getNextEntry();
             }
             Binary binary = null;
-            if (iconName == null) iconName = "icon.png"; // Just in cased
+            if (iconName.isEmpty()) iconName = "icon.png"; // Just in cased
             BufferedImage iconImage = null;
-            if (!binaryName.isEmpty() || !iconName.isEmpty()) {
+
+            while (entry != null) {
+                if (entry.getName().toLowerCase().contains("/watch/")) {
+                    entry = zipExtractor.getNextEntry();
+                    continue;
+                }
+                if (!binaryName.isEmpty() && entry.getName().endsWith("/" + binaryName)) {
+                    binary = Binary.parseBinary(zipExtractor);
+                    if (iconImage != null) break;
+                }
+                if (!iconName.isEmpty() && entry.getName().endsWith("/" + iconName)) {
+                    try {
+                        iconImage = ImageIO.read(zipExtractor);
+                    } catch (IIOException e) {
+                        System.err.println("Image error");
+                    }
+                    if (binary != null) break;
+                }
+                entry = zipExtractor.getNextEntry();
+            }
+            if (binary == null || iconImage == null) {
+                connection.disconnect();
+                connection = (HttpURLConnection) url.openConnection();
+                zipExtractor = new ZipInputStream(connection.getInputStream());
+                entry = zipExtractor.getNextEntry();
                 while (entry != null) {
                     if (entry.getName().toLowerCase().contains("/watch/")) {
                         entry = zipExtractor.getNextEntry();
@@ -188,49 +212,25 @@ public class AppDownloader {
                     }
                     entry = zipExtractor.getNextEntry();
                 }
-                if (binary == null || iconImage == null) {
-                    connection.disconnect();
-                    connection = (HttpURLConnection) url.openConnection();
-                    zipExtractor = new ZipInputStream(connection.getInputStream());
-                    entry = zipExtractor.getNextEntry();
-                    while (entry != null) {
-                        if (entry.getName().toLowerCase().contains("/watch/")) {
-                            entry = zipExtractor.getNextEntry();
-                            continue;
+            }
+            if (iconImage == null) {
+                connection.disconnect();
+                connection = (HttpURLConnection) url.openConnection();
+                zipExtractor = new ZipInputStream(connection.getInputStream());
+                entry = zipExtractor.getNextEntry();
+                while (entry != null) {
+                    if (!iconName.isEmpty() && entry.getName().endsWith("iTunesArtwork")) {
+                        try {
+                            iconImage = ImageIO.read(zipExtractor);
+                        } catch (IIOException e) {
+                            System.err.println("Image error");
                         }
-                        if (!binaryName.isEmpty() && entry.getName().endsWith("/" + binaryName)) {
-                            binary = Binary.parseBinary(zipExtractor);
-                            if (iconImage != null) break;
-                        }
-                        if (!iconName.isEmpty() && entry.getName().endsWith("/" + iconName)) {
-                            try {
-                                iconImage = ImageIO.read(zipExtractor);
-                            } catch (IIOException e) {
-                                System.err.println("Image error");
-                            }
-                            if (binary != null) break;
-                        }
-                        entry = zipExtractor.getNextEntry();
+                        if (binary != null) break;
                     }
-                }
-                if (iconImage == null) {
-                    connection.disconnect();
-                    connection = (HttpURLConnection) url.openConnection();
-                    zipExtractor = new ZipInputStream(connection.getInputStream());
                     entry = zipExtractor.getNextEntry();
-                    while (entry != null) {
-                        if (!iconName.isEmpty() && entry.getName().endsWith("iTunesArtwork")) {
-                            try {
-                                iconImage = ImageIO.read(zipExtractor);
-                            } catch (IIOException e) {
-                                System.err.println("Image error");
-                            }
-                            if (binary != null) break;
-                        }
-                        entry = zipExtractor.getNextEntry();
-                    }
                 }
-            } else {
+            }
+            if (binary == null) {
                 binary = Binary.fromJSON(new JSONObject());
             }
             if (artwork == null && iconImage != null) {
