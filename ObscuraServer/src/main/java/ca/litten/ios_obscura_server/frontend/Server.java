@@ -22,6 +22,7 @@ public class Server {
     private static final HttpServerProvider provider = HttpServerProvider.provider();
     private static final Random rand = new Random();
     private static final byte[] searchIcon;
+    private static final byte[] searchIcon7;
     private static final byte[] favicon;
     private static final byte[] mainicon;
     private static final byte[] icon32;
@@ -39,6 +40,11 @@ public class Server {
             searchIcon = new byte[Math.toIntExact(file.length())];
             search.read(searchIcon);
             search.close();
+            file = new File("searchIcon7.jpg");
+            FileInputStream search7 = new FileInputStream(file);
+            searchIcon7 = new byte[Math.toIntExact(file.length())];
+            search7.read(searchIcon7);
+            search7.close();
             file = new File("favicon.ico");
             FileInputStream fav = new FileInputStream(file);
             favicon = new byte[Math.toIntExact(file.length())];
@@ -458,9 +464,26 @@ public class Server {
         });
         server.createContext("/searchIcon").setHandler(exchange -> {
             Headers outgoingHeaders = exchange.getResponseHeaders();
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            boolean macOS_connection = userAgent.contains("Macintosh");
+            boolean modernOS = false;
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                String ver = split2[split2.length - 1].replace("_", ".");
+                modernOS = App.isVersionLater("7.0", ver);
+            }
+            if (macOS_connection) {
+                String[] split1 = userAgent.split("AppleWebKit");
+                String[] split2 = split1[0].split("\\)")[0].split(" ");
+                String ver = split2[split2.length - 1].replace("_", ".");
+                modernOS = App.isVersionLater("10.10", ver);
+            }
             outgoingHeaders.set("Content-Type", "image/jpeg");
-            exchange.sendResponseHeaders(200, searchIcon.length);
-            exchange.getResponseBody().write(searchIcon);
+            exchange.sendResponseHeaders(200, (modernOS ? searchIcon7 : searchIcon).length);
+            exchange.getResponseBody().write(modernOS ? searchIcon7 : searchIcon);
             exchange.close();
         });
         server.createContext("/icon").setHandler(exchange -> {

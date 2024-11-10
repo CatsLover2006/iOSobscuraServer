@@ -2,6 +2,7 @@ package ca.litten.ios_obscura_server.parser;
 
 import ca.litten.ios_obscura_server.backend.App;
 import ca.litten.ios_obscura_server.backend.AppList;
+import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListParser;
@@ -55,12 +56,14 @@ public class AppDownloader {
                 if (entry.getName().toLowerCase().endsWith(".app/info.plist")) {
                     NSDictionary parsedData;
                     byte[] bytes = IOUtils.toByteArray(zipExtractor);
-                    ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
                     try {
-                        parsedData = (NSDictionary) PropertyListParser.parse(stream);
+                        parsedData = (NSDictionary) PropertyListParser.parse(bytes);
                     } catch (SAXParseException e) {
                         String decoded = new String(bytes, StandardCharsets.UTF_8);
-                        parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">")));
+                        if (decoded.startsWith("bplist"))
+                            parsedData = (NSDictionary) BinaryPropertyListParser.parse(bytes);
+                        else
+                            parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">") + 1).getBytes(StandardCharsets.UTF_8));
                     }
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
@@ -139,7 +142,10 @@ public class AppDownloader {
                         parsedData = (NSDictionary) PropertyListParser.parse(stream);
                     } catch (SAXParseException e) {
                         String decoded = new String(bytes, StandardCharsets.UTF_8);
-                        parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">")));
+                        if (decoded.startsWith("bplist"))
+                            parsedData = (NSDictionary) BinaryPropertyListParser.parse(bytes);
+                        else
+                            parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">") + 1).getBytes(StandardCharsets.UTF_8));
                     }
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
