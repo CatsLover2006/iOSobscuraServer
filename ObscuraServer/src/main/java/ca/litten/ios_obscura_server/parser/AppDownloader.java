@@ -166,6 +166,7 @@ public class AppDownloader {
                 entry = zipExtractor.getNextEntry();
             }
             Binary binary = null;
+            if (iconName == null) iconName = "icon.png"; // Just in cased
             BufferedImage iconImage = null;
             if (!binaryName.isEmpty() || !iconName.isEmpty()) {
                 while (entry != null) {
@@ -212,6 +213,23 @@ public class AppDownloader {
                         entry = zipExtractor.getNextEntry();
                     }
                 }
+                if (iconImage == null) {
+                    connection.disconnect();
+                    connection = (HttpURLConnection) url.openConnection();
+                    zipExtractor = new ZipInputStream(connection.getInputStream());
+                    entry = zipExtractor.getNextEntry();
+                    while (entry != null) {
+                        if (!iconName.isEmpty() && entry.getName().endsWith("/iTunesArtwork")) {
+                            try {
+                                iconImage = ImageIO.read(zipExtractor);
+                            } catch (IIOException e) {
+                                System.err.println("Image error");
+                            }
+                            if (binary != null) break;
+                        }
+                        entry = zipExtractor.getNextEntry();
+                    }
+                }
             } else {
                 binary = Binary.fromJSON(new JSONObject());
             }
@@ -219,7 +237,7 @@ public class AppDownloader {
                 ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
                 ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
                 jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                jpgWriteParam.setCompressionQuality(0.5f);
+                jpgWriteParam.setCompressionQuality((float) Math.min((1.18 * Math.exp(-0.0143 * iconImage.getWidth())), 1.0));
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 jpgWriter.setOutput(new MemoryCacheImageOutputStream(out));
                 BufferedImage image;
