@@ -126,34 +126,7 @@ public class Server {
                 out.append("<a href=\"").append(donateURL).append("\"><div><div>Donate to this instance</div></div></a>");
             out.append("</fieldset></panel></body></html>");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
-            exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
-            exchange.close();
-        });
-        server.createContext("/getCSS/checkType").setHandler(exchange -> {
-            Headers incomingHeaders = exchange.getRequestHeaders();
-            Headers outgoingHeaders = exchange.getResponseHeaders();
-            String userAgent = incomingHeaders.get("user-agent").get(0);
-            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
-            boolean macOS_connection = userAgent.contains("Macintosh");
-            String out = "http://cydia.saurik.com/cytyle/style-3163da6b7950852a03d31ea77735f4e1d2ba6699.css";
-            if (iOS_connection) {
-                String[] split1 = userAgent.split("like Mac OS X");
-                String[] split2 = split1[0].split(" ");
-                String ver = split2[split2.length - 1].replace("_", ".");
-                if (App.isVersionLater("7.0", ver)) {
-                    out = "http://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
-                }
-            }
-            if (macOS_connection) {
-                String[] split1 = userAgent.split("AppleWebKit");
-                String[] split2 = split1[0].split("\\)")[0].split(" ");
-                String ver = split2[split2.length - 1].replace("_", ".");
-                if (App.isVersionLater("10.10", ver)) {
-                    out = "http://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
-                }
-            }
-            byte[] bytes = out.getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
@@ -182,7 +155,7 @@ public class Server {
                 }
             }
             outgoingHeaders.set("Location", out);
-            outgoingHeaders.set("Cache-Control", "max-age=172800");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(308, 0);
             exchange.close();
         });
@@ -210,7 +183,7 @@ public class Server {
                 }
             }
             outgoingHeaders.set("Location", out);
-            outgoingHeaders.set("Cache-Control", "max-age=172800");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(308, 0);
             exchange.close();
         });
@@ -229,6 +202,7 @@ public class Server {
             }
             out.append("</ol></body></html>");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
@@ -237,6 +211,7 @@ public class Server {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
             App app = AppList.getAppByBundleID(splitURI[2]);
+            outgoingHeaders.set("Cache-Control", "max-age=1800,immutable");
             if (app == null || app.getArtworkURL().isEmpty()) {
                 outgoingHeaders.set("Location", "https://files.scottshar.es/Share%20Sheets/app-icons/Placeholder-Icon.png");
             } else if (app.getArtworkURL().startsWith("data")) {
@@ -250,7 +225,6 @@ public class Server {
             } else if (app.getArtworkURL().startsWith("http")) {
                 outgoingHeaders.set("Location", app.getArtworkURL());
             }
-            outgoingHeaders.set("Cache-Control", "max-age=172800");
             exchange.sendResponseHeaders(308, 0);
             exchange.close();
         });
@@ -287,6 +261,7 @@ public class Server {
             }
             out.append("</fieldset></panel></body></html>");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
@@ -323,6 +298,7 @@ public class Server {
             item.put("metadata", metadata);
             root.put("items", new NSArray(new NSDictionary[] {item}));
             byte[] bytes = root.toXMLPropertyList().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
@@ -385,6 +361,7 @@ public class Server {
             }
             out.append("</panel></body></html>");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
@@ -401,6 +378,7 @@ public class Server {
                             .append("/").append(version).append("\n");
             }
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
@@ -409,7 +387,7 @@ public class Server {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("\\?");
             outgoingHeaders.set("Location", "/search/" + splitURI[1].substring(7));
-            outgoingHeaders.set("Cache-Control", "max-age=172800");
+            outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(308, 0);
             exchange.close();
         });
@@ -458,6 +436,7 @@ public class Server {
             }
             out.append("</panel></body></html>");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
@@ -482,6 +461,7 @@ public class Server {
                 modernOS = App.isVersionLater("10.10", ver);
             }
             outgoingHeaders.set("Content-Type", "image/jpeg");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(200, (modernOS ? searchIcon7 : searchIcon).length);
             exchange.getResponseBody().write(modernOS ? searchIcon7 : searchIcon);
             exchange.close();
@@ -489,6 +469,7 @@ public class Server {
         server.createContext("/icon").setHandler(exchange -> {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             outgoingHeaders.set("Content-Type", "image/png");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(200, mainicon.length);
             exchange.getResponseBody().write(mainicon);
             exchange.close();
@@ -496,6 +477,7 @@ public class Server {
         server.createContext("/icon32").setHandler(exchange -> {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             outgoingHeaders.set("Content-Type", "image/png");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(200, icon32.length);
             exchange.getResponseBody().write(icon32);
             exchange.close();
@@ -503,6 +485,7 @@ public class Server {
         server.createContext("/icon16").setHandler(exchange -> {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             outgoingHeaders.set("Content-Type", "image/png");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(200, icon16.length);
             exchange.getResponseBody().write(icon16);
             exchange.close();
@@ -510,6 +493,7 @@ public class Server {
         server.createContext("/favicon.ico").setHandler(exchange -> {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             outgoingHeaders.set("Content-Type", "image/vnd.microsoft.icon");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(200, favicon.length);
             exchange.getResponseBody().write(favicon);
             exchange.close();
@@ -521,6 +505,7 @@ public class Server {
                 return;
             }
             AppList.loadAppDatabaseFile(new File("db.json"));
+            exchange.getResponseHeaders().set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, 0);
             exchange.close();
             lastReload = System.currentTimeMillis();
