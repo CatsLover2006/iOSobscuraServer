@@ -5,11 +5,16 @@ import ca.litten.ios_obscura_server.backend.AppList;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListParser;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
+import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Base64;
@@ -172,7 +177,11 @@ public class AppDownloader {
                         if (iconImage != null) break;
                     }
                     if (!iconName.isEmpty() && entry.getName().endsWith("/" + iconName)) {
-                        iconImage = ImageIO.read(zipExtractor);
+                        try {
+                            iconImage = ImageIO.read(zipExtractor);
+                        } catch (IIOException e) {
+                            System.err.println("Image error");
+                        }
                         if (binary != null) break;
                     }
                     entry = zipExtractor.getNextEntry();
@@ -192,7 +201,11 @@ public class AppDownloader {
                             if (iconImage != null) break;
                         }
                         if (!iconName.isEmpty() && entry.getName().endsWith("/" + iconName)) {
-                            iconImage = ImageIO.read(zipExtractor);
+                            try {
+                                iconImage = ImageIO.read(zipExtractor);
+                            } catch (IIOException e) {
+                                System.err.println("Image error");
+                            }
                             if (binary != null) break;
                         }
                         entry = zipExtractor.getNextEntry();
@@ -201,13 +214,12 @@ public class AppDownloader {
             } else {
                 binary = Binary.fromJSON(new JSONObject());
             }
-            System.out.println(iconName);
             if (artwork == null && iconImage != null) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 ImageIO.write(iconImage, "jpeg", out);
                 byte[] bytes = out.toByteArray();
-                artwork = "data:image/jpeg;base64," + Base64.getEncoder().encode(bytes);
-                System.out.println(artwork.length());
+                artwork = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(bytes);
+                System.out.println(artwork);
             }
             App app = AppList.getAppByBundleID(bundleID);
             if (app == null) {
