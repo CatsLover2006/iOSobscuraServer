@@ -371,7 +371,7 @@ public class Server {
                                 .append("\"><div><div>Install with TrollStore</div></div></a>");
                     if (App.isVersionLater("12.2", iOS_ver))
                         out.append("<a href=\"altstore://install?url=").append(versions[i].getUrl())
-                                .append("\"><div><div>Install with AltStore</div></div></a>");
+                                .append("\"><div><div>Install with AltStore Classic</div></div></a>");
                     if (App.isVersionLater("14.0", iOS_ver))
                         out.append("<a href=\"sidestore://install?url=").append(versions[i].getUrl())
                                 .append("\"><div><div>Install with SideStore</div></div></a>");
