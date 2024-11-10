@@ -26,6 +26,7 @@ public class AppList {
             apps.clear();
             for (Object appObject : appArray) {
                 JSONObject appJSON = (JSONObject) appObject;
+                if (appJSON.getString("art").isEmpty()) continue;
                 App app = new App(appJSON.getString("name"), appJSON.getString("bundle"));
                 for (Object versionObject : appJSON.getJSONArray("versions")) {
                     JSONObject versionJSON = (JSONObject) versionObject;

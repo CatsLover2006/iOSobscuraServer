@@ -2,12 +2,17 @@ package ca.litten.ios_obscura_server.parser;
 
 import ca.litten.ios_obscura_server.backend.App;
 import ca.litten.ios_obscura_server.backend.AppList;
+import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListParser;
 import org.json.JSONObject;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Base64;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -33,6 +38,7 @@ public class AppDownloader {
             ZipEntry entry = zipExtractor.getNextEntry();
             boolean foundOther = false;
             String binaryName = "";
+            String iconName = "";
             while (entry != null) {
                 if (entry.getName().toLowerCase().contains("/watch/")) {
                     entry = zipExtractor.getNextEntry();
@@ -69,6 +75,25 @@ public class AppDownloader {
                                 String str = String.valueOf(parsedData.get("CFBundleExecutable"));
                                 if (str.equals("null")) break;
                                 binaryName = str;
+                                break;
+                            }
+                            case "CFBundleIcons": {
+                                if (iconName.isEmpty()) break;
+                                try {
+                                    NSArray icons = (NSArray) ((NSDictionary) ((NSDictionary) parsedData.get("CFBundleIcons"))
+                                            .get("CFBundlePrimaryIcon")).get("CFBundleIconFiles");
+                                    iconName = icons.objectAtIndex(0).toString();
+                                    if (!iconName.endsWith(".png"))
+                                        iconName += "@2x.png";
+                                } catch (Throwable e) {
+                                    // Do nothing
+                                }
+                                break;
+                            }
+                            case "CFBundleIconFile": {
+                                String str = String.valueOf(parsedData.get("CFBundleIcon"));
+                                if (str.equals("null")) break;
+                                iconName = str;
                                 break;
                             }
                         }
@@ -123,33 +148,53 @@ public class AppDownloader {
                 entry = zipExtractor.getNextEntry();
             }
             Binary binary = null;
-            if (!binaryName.isEmpty()) {
+            BufferedImage iconImage = null;
+            if (!binaryName.isEmpty() || !iconName.isEmpty()) {
                 while (entry != null) {
                     if (entry.getName().toLowerCase().contains("/watch/")) {
                         entry = zipExtractor.getNextEntry();
                         continue;
                     }
-                    if (entry.getName().endsWith("/" + binaryName)) {
+                    if (!binaryName.isEmpty() && entry.getName().endsWith("/" + binaryName)) {
                         binary = Binary.parseBinary(zipExtractor);
-                        break;
+                        if (iconImage != null) break;
+                    }
+                    if (!iconName.isEmpty() && entry.getName().endsWith("/" + iconName)) {
+                        iconImage = ImageIO.read(zipExtractor);
+                        if (binary != null) break;
                     }
                     entry = zipExtractor.getNextEntry();
                 }
-                if (binary == null) {
+                if (binary == null || iconImage == null) {
                     connection.disconnect();
                     connection = (HttpURLConnection) url.openConnection();
                     zipExtractor = new ZipInputStream(connection.getInputStream());
                     entry = zipExtractor.getNextEntry();
                     while (entry != null) {
-                        if (entry.getName().endsWith("/" + binaryName)) {
+                        if (entry.getName().toLowerCase().contains("/watch/")) {
+                            entry = zipExtractor.getNextEntry();
+                            continue;
+                        }
+                        if (!binaryName.isEmpty() && entry.getName().endsWith("/" + binaryName)) {
                             binary = Binary.parseBinary(zipExtractor);
-                            break;
+                            if (iconImage != null) break;
+                        }
+                        if (!iconName.isEmpty() && entry.getName().endsWith("/" + iconName)) {
+                            iconImage = ImageIO.read(zipExtractor);
+                            if (binary != null) break;
                         }
                         entry = zipExtractor.getNextEntry();
                     }
                 }
             } else {
                 binary = Binary.fromJSON(new JSONObject());
+            }
+            if (artwork == null) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                ImageIO.write(iconImage, "jpeg", out);
+                byte[] bytes = out.toByteArray();
+                artwork = "data:image/jpeg;base64," + Base64.getEncoder().encode(bytes);
+                System.out.println(artwork.length());
             }
             App app = AppList.getAppByBundleID(bundleID);
             if (app == null) {

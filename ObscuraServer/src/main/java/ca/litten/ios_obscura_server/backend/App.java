@@ -146,6 +146,13 @@ public class App {
     
     public void updateArtwork(String version, String url) {
         if (url == null) return;
+        if (url.startsWith("data:")) {
+            if (!artworkURL.startsWith("data:")) return;
+        } else if (artworkURL.startsWith("data:")) {
+            earliestArtVersion = version;
+            artworkURL = url;
+            return;
+        }
         if (isVersionLater(version, earliestArtVersion)) {
             earliestArtVersion = version;
             artworkURL = url;
