@@ -219,7 +219,7 @@ public class AppDownloader {
                     zipExtractor = new ZipInputStream(connection.getInputStream());
                     entry = zipExtractor.getNextEntry();
                     while (entry != null) {
-                        if (!iconName.isEmpty() && entry.getName().endsWith("/iTunesArtwork")) {
+                        if (!iconName.isEmpty() && entry.getName().endsWith("iTunesArtwork")) {
                             try {
                                 iconImage = ImageIO.read(zipExtractor);
                             } catch (IIOException e) {
