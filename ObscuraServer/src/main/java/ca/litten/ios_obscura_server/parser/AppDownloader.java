@@ -237,7 +237,7 @@ public class AppDownloader {
                 ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
                 ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
                 jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                jpgWriteParam.setCompressionQuality((float) Math.min((1.18 * Math.exp(-0.0143 * iconImage.getWidth())), 1.0));
+                jpgWriteParam.setCompressionQuality((float) Math.min(0.1 + (0.918 * Math.exp(-0.0131 * iconImage.getWidth())), 1.0));
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 jpgWriter.setOutput(new MemoryCacheImageOutputStream(out));
                 BufferedImage image;
