@@ -8,8 +8,9 @@ import com.dd.plist.PropertyListParser;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
-import javax.imageio.IIOException;
-import javax.imageio.ImageIO;
+import javax.imageio.*;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -215,11 +216,27 @@ public class AppDownloader {
                 binary = Binary.fromJSON(new JSONObject());
             }
             if (artwork == null && iconImage != null) {
+                ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+                ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+                jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                jpgWriteParam.setCompressionQuality(0.5f);
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
-                ImageIO.write(iconImage, "jpeg", out);
+                jpgWriter.setOutput(new MemoryCacheImageOutputStream(out));
+                BufferedImage image;
+                if (iconImage.getTransparency() == Transparency.OPAQUE) {
+                    image = iconImage;
+                } else {
+                    image = new BufferedImage(iconImage.getWidth(), iconImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+                    Graphics2D g2d = image.createGraphics();
+                    g2d.setColor(Color.WHITE);
+                    g2d.fillRect(0, 0, image.getWidth(), image.getHeight());
+                    g2d.drawImage(iconImage, 0, 0, null);
+                    g2d.dispose();
+                }
+                jpgWriter.write(null, new IIOImage(image, null, null), jpgWriteParam);
+                jpgWriter.dispose();
                 byte[] bytes = out.toByteArray();
                 artwork = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(bytes);
-                System.out.println(artwork);
             }
             App app = AppList.getAppByBundleID(bundleID);
             if (app == null) {

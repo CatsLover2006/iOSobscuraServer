@@ -15,10 +15,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Server {
     private final HttpServer server;
@@ -234,9 +231,17 @@ public class Server {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
             App app = AppList.getAppByBundleID(splitURI[2]);
-            if (app == null || app.getArtworkURL().isEmpty() || !app.getArtworkURL().startsWith("http")) {
+            if (app == null || app.getArtworkURL().isEmpty()) {
                 outgoingHeaders.set("Location", "https://files.scottshar.es/Share%20Sheets/app-icons/Placeholder-Icon.png");
-            } else {
+            } else if (app.getArtworkURL().startsWith("data")) {
+                String[] relevantData = app.getArtworkURL().split(";");
+                outgoingHeaders.set("Content-Type", relevantData[0].split(":")[1]);
+                byte[] data = Base64.getDecoder().decode(relevantData[1].split(",")[1]);
+                exchange.sendResponseHeaders(200, data.length);
+                exchange.getResponseBody().write(data);
+                exchange.close();
+                return;
+            } else if (app.getArtworkURL().startsWith("http")) {
                 outgoingHeaders.set("Location", app.getArtworkURL());
             }
             outgoingHeaders.set("Cache-Control", "max-age=172800");
