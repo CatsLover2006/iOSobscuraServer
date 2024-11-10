@@ -7,6 +7,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.PropertyListParser;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
+import org.xml.sax.SAXParseException;
 
 import javax.imageio.*;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -51,7 +53,15 @@ public class AppDownloader {
                     continue;
                 }
                 if (entry.getName().toLowerCase().endsWith(".app/info.plist")) {
-                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
+                    NSDictionary parsedData;
+                    byte[] bytes = IOUtils.toByteArray(zipExtractor);
+                    ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+                    try {
+                        parsedData = (NSDictionary) PropertyListParser.parse(stream);
+                    } catch (SAXParseException e) {
+                        String decoded = new String(bytes, StandardCharsets.UTF_8);
+                        parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">")));
+                    }
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
                             case "CFBundleDisplayName": {
@@ -122,7 +132,15 @@ public class AppDownloader {
                     foundOther = true;
                 }
                 if (entry.getName().toLowerCase().endsWith("itunesmetadata.plist")) {
-                    NSDictionary parsedData = (NSDictionary) PropertyListParser.parse(zipExtractor);
+                    NSDictionary parsedData;
+                    byte[] bytes = IOUtils.toByteArray(zipExtractor);
+                    ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+                    try {
+                        parsedData = (NSDictionary) PropertyListParser.parse(stream);
+                    } catch (SAXParseException e) {
+                        String decoded = new String(bytes, StandardCharsets.UTF_8);
+                        parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">")));
+                    }
                     for (String key : parsedData.allKeys()) {
                         switch (key) {
                             case "softwareVersionBundleId": {

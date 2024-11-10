@@ -4,6 +4,9 @@
     "database_location": "db.json",
     "port": 12345,
     "archive_org_archives": [
+        "geekbench-3-v-3.0.0",
+        "geekbench-v-2.2.8",
+        "Geekbench-iPA",
         "mactracker-ipa-collection",
         "Untestedioscollection",
         "apps-ios",
