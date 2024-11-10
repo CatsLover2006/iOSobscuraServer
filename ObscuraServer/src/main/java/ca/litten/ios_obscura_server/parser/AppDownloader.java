@@ -77,6 +77,18 @@ public class AppDownloader {
                                 binaryName = str;
                                 break;
                             }
+                            case "CFBundleIconFiles": {
+                                if (iconName.isEmpty()) break;
+                                try {
+                                    NSArray icons = (NSArray) parsedData.get("CFBundleIconFiles");
+                                    iconName = icons.objectAtIndex(0).toString();
+                                    if (!iconName.endsWith(".png"))
+                                        iconName += "@2x.png";
+                                } catch (Throwable e) {
+                                    // Do nothing
+                                }
+                                break;
+                            }
                             case "CFBundleIcons": {
                                 if (iconName.isEmpty()) break;
                                 try {
@@ -189,13 +201,14 @@ public class AppDownloader {
             } else {
                 binary = Binary.fromJSON(new JSONObject());
             }
+            System.out.println(iconImage);
             if (artwork == null && iconImage != null) {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 ImageIO.write(iconImage, "jpeg", out);
                 byte[] bytes = out.toByteArray();
                 artwork = "data:image/jpeg;base64," + Base64.getEncoder().encode(bytes);
-                System.out.println(artwork.length());
             }
+            System.out.println(artwork);
             App app = AppList.getAppByBundleID(bundleID);
             if (app == null) {
                 app = new App(appName, bundleID);
