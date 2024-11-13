@@ -271,7 +271,7 @@ public class AppDownloader {
             if (binary == null) {
                 binary = Binary.fromJSON(new JSONObject());
             }
-            if (artwork == null && iconImage != null) {
+            if (artwork.isEmpty() && iconImage != null) {
                 ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
                 ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
                 jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
