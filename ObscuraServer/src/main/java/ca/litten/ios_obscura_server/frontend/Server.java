@@ -453,9 +453,9 @@ public class Server {
                 }
                 out.append("</fieldset>");
             }
-            out.append("</panel></body></html>");
+            out.append("<fieldset><a href=\"/\"><div><div>Return to Homepage</div></div></a></fieldset></panel></body></html>");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
-            outgoingHeaders.set("Cache-Control", "no-cache");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
             exchange.close();
