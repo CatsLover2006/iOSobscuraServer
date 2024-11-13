@@ -14,10 +14,7 @@ import javax.imageio.*;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -48,176 +45,157 @@ public class AppDownloader {
             boolean foundOther = false;
             String binaryName = "";
             String iconName = "";
-            while (entry != null) {
-                if (entry.getName().toLowerCase().contains("/watch/")) {
+            try {
+                while (entry != null) {
+                    if (entry.getName().toLowerCase().contains("/watch/")) {
+                        entry = zipExtractor.getNextEntry();
+                        continue;
+                    }
+                    if (entry.getName().toLowerCase().endsWith(".app/info.plist")) {
+                        NSDictionary parsedData;
+                        byte[] bytes = IOUtils.toByteArray(zipExtractor);
+                        try {
+                            parsedData = (NSDictionary) PropertyListParser.parse(bytes);
+                        } catch (SAXParseException e) {
+                            String decoded = new String(bytes, StandardCharsets.UTF_8);
+                            if (decoded.startsWith("bplist"))
+                                parsedData = (NSDictionary) BinaryPropertyListParser.parse(bytes);
+                            else
+                                parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">") + 1).getBytes(StandardCharsets.UTF_8));
+                        }
+                        for (String key : parsedData.allKeys()) {
+                            switch (key) {
+                                case "CFBundleDisplayName": {
+                                    if (appName.isEmpty())
+                                        appName = String.valueOf(parsedData.get("CFBundleDisplayName"));
+                                    break;
+                                }
+                                case "CFBundleIdentifier": {
+                                    String str = String.valueOf(parsedData.get("CFBundleIdentifier"));
+                                    if (str.equals("null")) break;
+                                    bundleID = str;
+                                    break;
+                                }
+                                case "CFBundleVersion": {
+                                    String str = String.valueOf(parsedData.get("CFBundleVersion"));
+                                    if (str.equals("null")) break;
+                                    version = str;
+                                    break;
+                                }
+                                case "MinimumOSVersion": {
+                                    String str = String.valueOf(parsedData.get("MinimumOSVersion"));
+                                    if (str.equals("null")) break;
+                                    minimumVersion = str;
+                                    break;
+                                }
+                                case "CFBundleExecutable": {
+                                    String str = String.valueOf(parsedData.get("CFBundleExecutable"));
+                                    if (str.equals("null")) break;
+                                    binaryName = str;
+                                    break;
+                                }
+                                case "CFBundleIconFiles": {
+                                    if (!iconName.isEmpty()) break;
+                                    try {
+                                        NSArray icons = (NSArray) parsedData.get("CFBundleIconFiles");
+                                        iconName = icons.objectAtIndex(0).toString();
+                                        if (!iconName.endsWith(".png"))
+                                            iconName += "@2x.png";
+                                    } catch (Throwable e) {
+                                        // Do nothing
+                                    }
+                                    break;
+                                }
+                                case "CFBundleIcons": {
+                                    if (!iconName.isEmpty()) break;
+                                    try {
+                                        NSArray icons = (NSArray) ((NSDictionary) ((NSDictionary) parsedData.get("CFBundleIcons"))
+                                                .get("CFBundlePrimaryIcon")).get("CFBundleIconFiles");
+                                        iconName = icons.objectAtIndex(0).toString();
+                                        if (!iconName.endsWith(".png"))
+                                            iconName += "@2x.png";
+                                    } catch (Throwable e) {
+                                        // Do nothing
+                                    }
+                                    break;
+                                }
+                                case "CFBundleIconFile": {
+                                    String str = String.valueOf(parsedData.get("CFBundleIcon"));
+                                    if (str.equals("null")) break;
+                                    iconName = str;
+                                    break;
+                                }
+                            }
+                        }
+                        if (foundOther) {
+                            break;
+                        }
+                        foundOther = true;
+                    }
+                    if (entry.getName().toLowerCase().endsWith("itunesmetadata.plist")) {
+                        NSDictionary parsedData;
+                        byte[] bytes = IOUtils.toByteArray(zipExtractor);
+                        ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
+                        try {
+                            parsedData = (NSDictionary) PropertyListParser.parse(stream);
+                        } catch (SAXParseException e) {
+                            String decoded = new String(bytes, StandardCharsets.UTF_8);
+                            if (decoded.startsWith("bplist"))
+                                parsedData = (NSDictionary) BinaryPropertyListParser.parse(bytes);
+                            else
+                                parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">") + 1).getBytes(StandardCharsets.UTF_8));
+                        }
+                        for (String key : parsedData.allKeys()) {
+                            switch (key) {
+                                case "softwareVersionBundleId": {
+                                    String str = String.valueOf(parsedData.get("softwareVersionBundleId"));
+                                    if (str.equals("null")) break;
+                                    bundleID = str;
+                                    break;
+                                }
+                                case "bundleShortVersionString": {
+                                    String str = String.valueOf(parsedData.get("bundleShortVersionString"));
+                                    if (str.equals("null")) break;
+                                    version = str;
+                                    break;
+                                }
+                                case "itemName": {
+                                    String str = String.valueOf(parsedData.get("itemName"));
+                                    if (str.equals("null")) break;
+                                    appName = str;
+                                    usesMetaName = true;
+                                    break;
+                                }
+                                case "softwareIcon57x57URL": {
+                                    String str = String.valueOf(parsedData.get("softwareIcon57x57URL"));
+                                    if (str.equals("null")) break;
+                                    artwork = str;
+                                    break;
+                                }
+                                case "artistName": {
+                                    String str = String.valueOf(parsedData.get("artistName"));
+                                    if (str.equals("null")) break;
+                                    developer = str;
+                                    break;
+                                }
+                            }
+                        }
+                        if (foundOther) {
+                            break;
+                        }
+                        foundOther = true;
+                    }
                     entry = zipExtractor.getNextEntry();
-                    continue;
                 }
-                if (entry.getName().toLowerCase().endsWith(".app/info.plist")) {
-                    NSDictionary parsedData;
-                    byte[] bytes = IOUtils.toByteArray(zipExtractor);
-                    try {
-                        parsedData = (NSDictionary) PropertyListParser.parse(bytes);
-                    } catch (SAXParseException e) {
-                        String decoded = new String(bytes, StandardCharsets.UTF_8);
-                        if (decoded.startsWith("bplist"))
-                            parsedData = (NSDictionary) BinaryPropertyListParser.parse(bytes);
-                        else
-                            parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">") + 1).getBytes(StandardCharsets.UTF_8));
-                    }
-                    for (String key : parsedData.allKeys()) {
-                        switch (key) {
-                            case "CFBundleDisplayName": {
-                                if (appName.isEmpty())
-                                    appName = String.valueOf(parsedData.get("CFBundleDisplayName"));
-                                break;
-                            }
-                            case "CFBundleIdentifier": {
-                                String str = String.valueOf(parsedData.get("CFBundleIdentifier"));
-                                if (str.equals("null")) break;
-                                bundleID = str;
-                                break;
-                            }
-                            case "CFBundleVersion": {
-                                String str = String.valueOf(parsedData.get("CFBundleVersion"));
-                                if (str.equals("null")) break;
-                                version = str;
-                                break;
-                            }
-                            case "MinimumOSVersion": {
-                                String str = String.valueOf(parsedData.get("MinimumOSVersion"));
-                                if (str.equals("null")) break;
-                                minimumVersion = str;
-                                break;
-                            }
-                            case "CFBundleExecutable": {
-                                String str = String.valueOf(parsedData.get("CFBundleExecutable"));
-                                if (str.equals("null")) break;
-                                binaryName = str;
-                                break;
-                            }
-                            case "CFBundleIconFiles": {
-                                if (!iconName.isEmpty()) break;
-                                try {
-                                    NSArray icons = (NSArray) parsedData.get("CFBundleIconFiles");
-                                    iconName = icons.objectAtIndex(0).toString();
-                                    if (!iconName.endsWith(".png"))
-                                        iconName += "@2x.png";
-                                } catch (Throwable e) {
-                                    // Do nothing
-                                }
-                                break;
-                            }
-                            case "CFBundleIcons": {
-                                if (!iconName.isEmpty()) break;
-                                try {
-                                    NSArray icons = (NSArray) ((NSDictionary) ((NSDictionary) parsedData.get("CFBundleIcons"))
-                                            .get("CFBundlePrimaryIcon")).get("CFBundleIconFiles");
-                                    iconName = icons.objectAtIndex(0).toString();
-                                    if (!iconName.endsWith(".png"))
-                                        iconName += "@2x.png";
-                                } catch (Throwable e) {
-                                    // Do nothing
-                                }
-                                break;
-                            }
-                            case "CFBundleIconFile": {
-                                String str = String.valueOf(parsedData.get("CFBundleIcon"));
-                                if (str.equals("null")) break;
-                                iconName = str;
-                                break;
-                            }
-                        }
-                    }
-                    if (foundOther) {
-                        break;
-                    }
-                    foundOther = true;
-                }
-                if (entry.getName().toLowerCase().endsWith("itunesmetadata.plist")) {
-                    NSDictionary parsedData;
-                    byte[] bytes = IOUtils.toByteArray(zipExtractor);
-                    ByteArrayInputStream stream = new ByteArrayInputStream(bytes);
-                    try {
-                        parsedData = (NSDictionary) PropertyListParser.parse(stream);
-                    } catch (SAXParseException e) {
-                        String decoded = new String(bytes, StandardCharsets.UTF_8);
-                        if (decoded.startsWith("bplist"))
-                            parsedData = (NSDictionary) BinaryPropertyListParser.parse(bytes);
-                        else
-                            parsedData = (NSDictionary) PropertyListParser.parse(decoded.substring(0, decoded.lastIndexOf(">") + 1).getBytes(StandardCharsets.UTF_8));
-                    }
-                    for (String key : parsedData.allKeys()) {
-                        switch (key) {
-                            case "softwareVersionBundleId": {
-                                String str = String.valueOf(parsedData.get("softwareVersionBundleId"));
-                                if (str.equals("null")) break;
-                                bundleID = str;
-                                break;
-                            }
-                            case "bundleShortVersionString": {
-                                String str = String.valueOf(parsedData.get("bundleShortVersionString"));
-                                if (str.equals("null")) break;
-                                version = str;
-                                break;
-                            }
-                            case "itemName": {
-                                String str = String.valueOf(parsedData.get("itemName"));
-                                if (str.equals("null")) break;
-                                appName = str;
-                                usesMetaName = true;
-                                break;
-                            }
-                            case "softwareIcon57x57URL": {
-                                String str = String.valueOf(parsedData.get("softwareIcon57x57URL"));
-                                if (str.equals("null")) break;
-                                artwork = str;
-                                break;
-                            }
-                            case "artistName": {
-                                String str = String.valueOf(parsedData.get("artistName"));
-                                if (str.equals("null")) break;
-                                developer = str;
-                                break;
-                            }
-                        }
-                    }
-                    if (foundOther) {
-                        break;
-                    }
-                    foundOther = true;
-                }
-                entry = zipExtractor.getNextEntry();
+            } catch (EOFException e) {
+                System.err.println("Unexpected end of ZIP file; continuing with parsing...");
             }
             Binary binary = null;
             if (iconName.isEmpty()) iconName = "icon.png"; // Just in cased
             BufferedImage iconImage = null;
             iconName = iconName.toLowerCase();
             binaryName = binaryName.toLowerCase();
-            while (entry != null) {
-                if (entry.getName().toLowerCase().contains("/watch/")) {
-                    entry = zipExtractor.getNextEntry();
-                    continue;
-                }
-                if (!binaryName.isEmpty() && entry.getName().toLowerCase().endsWith("/" + binaryName)) {
-                    binary = Binary.parseBinary(zipExtractor);
-                    if (iconImage != null || !artwork.isEmpty()) break;
-                }
-                if (artwork.isEmpty() && entry.getName().toLowerCase().endsWith("/" + iconName)) {
-                    try {
-                        iconImage = ImageIO.read(zipExtractor);
-                    } catch (IIOException e) {
-                        System.err.println("Image error");
-                    }
-                    if (binary != null) break;
-                }
-                entry = zipExtractor.getNextEntry();
-            }
-            if (binary == null || (artwork.isEmpty() && iconImage == null)) {
-                connection.disconnect();
-                connection = (HttpURLConnection) url.openConnection();
-                zipExtractor = new ZipInputStream(connection.getInputStream());
-                entry = zipExtractor.getNextEntry();
+            try {
                 while (entry != null) {
                     if (entry.getName().toLowerCase().contains("/watch/")) {
                         entry = zipExtractor.getNextEntry();
@@ -229,7 +207,7 @@ public class AppDownloader {
                     }
                     if (artwork.isEmpty() && entry.getName().toLowerCase().endsWith("/" + iconName)) {
                         try {
-                            iconImage = ImageIO.read(zipExtractor);
+                            iconImage = ImageIO.read(new ByteArrayInputStream(IOUtils.toByteArray(zipExtractor)));
                         } catch (IIOException e) {
                             System.err.println("Image error");
                         }
@@ -237,22 +215,57 @@ public class AppDownloader {
                     }
                     entry = zipExtractor.getNextEntry();
                 }
+            }  catch (EOFException e) {
+                System.err.println("Unexpected end of ZIP file; continuing with parsing...");
+            }
+            if (binary == null || (artwork.isEmpty() && iconImage == null)) {
+                connection.disconnect();
+                connection = (HttpURLConnection) url.openConnection();
+                zipExtractor = new ZipInputStream(connection.getInputStream());
+                try {
+                    entry = zipExtractor.getNextEntry();
+                    while (entry != null) {
+                        if (entry.getName().toLowerCase().contains("/watch/")) {
+                            entry = zipExtractor.getNextEntry();
+                            continue;
+                        }
+                        if (!binaryName.isEmpty() && entry.getName().toLowerCase().endsWith("/" + binaryName)) {
+                            binary = Binary.parseBinary(zipExtractor);
+                            if (iconImage != null || !artwork.isEmpty()) break;
+                        }
+                        if (artwork.isEmpty() && entry.getName().toLowerCase().endsWith("/" + iconName)) {
+                            try {
+                                iconImage = ImageIO.read(new ByteArrayInputStream(IOUtils.toByteArray(zipExtractor)));
+                            } catch (IIOException e) {
+                                System.err.println("Image error");
+                            }
+                            if (binary != null) break;
+                        }
+                        entry = zipExtractor.getNextEntry();
+                    }
+                }  catch (EOFException e) {
+                    System.err.println("Unexpected end of ZIP file; continuing with parsing...");
+                }
             }
             if (artwork.isEmpty() && iconImage == null) {
                 connection.disconnect();
                 connection = (HttpURLConnection) url.openConnection();
                 zipExtractor = new ZipInputStream(connection.getInputStream());
                 entry = zipExtractor.getNextEntry();
-                while (entry != null) {
-                    if (entry.getName().toLowerCase().endsWith("itunesartwork")) {
-                        try {
-                            iconImage = ImageIO.read(zipExtractor);
-                        } catch (IIOException e) {
-                            System.err.println("Image error");
+                try {
+                    while (entry != null) {
+                        if (entry.getName().toLowerCase().endsWith("itunesartwork")) {
+                            try {
+                                iconImage = ImageIO.read(new ByteArrayInputStream(IOUtils.toByteArray(zipExtractor)));
+                            } catch (IIOException e) {
+                                System.err.println("Image error");
+                            }
+                            break;
                         }
-                        break;
+                        entry = zipExtractor.getNextEntry();
                     }
-                    entry = zipExtractor.getNextEntry();
+                } catch (EOFException e) {
+                    System.err.println("Unexpected end of ZIP file; continuing with parsing...");
                 }
             }
             if (binary == null) {
