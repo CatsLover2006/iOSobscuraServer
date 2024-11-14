@@ -1,5 +1,6 @@
 package ca.litten.ios_obscura_server;
 
+import ca.litten.ios_obscura_server.backend.App;
 import ca.litten.ios_obscura_server.backend.AppList;
 import ca.litten.ios_obscura_server.frontend.Server;
 import ca.litten.ios_obscura_server.parser.AppDownloader;
@@ -14,6 +15,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
+import java.util.Objects;
 
 import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
 
@@ -133,6 +135,13 @@ public class Main {
         }
         System.out.println("Loading database...");
         AppList.loadAppDatabaseFile(databaseLocation, Arrays.asList(args).contains("--skipNoAppIcon"), Arrays.asList(args).contains("--skipDataIcon"));
+        if (AppList.getAppByBundleID("nil") == null) {
+            System.out.println("New database? Adding broken apps entry...");
+            App app = new App("Broken Apps", "nil");
+            app.updateArtwork("0.0", "http://www.mmocentralforums.com/gallery/data/1442/Finder-sad.png");
+            app.updateDeveloper("0.0", "Nobody in Particular");
+            AppList.addApp(app);
+        }
         System.out.println("Starting server...");
         try {
             server = new Server();

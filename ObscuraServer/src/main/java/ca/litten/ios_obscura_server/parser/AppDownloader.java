@@ -35,11 +35,11 @@ public class AppDownloader {
             long size = connection.getContentLengthLong();
             String appName = "";
             String bundleID = "nil";
-            String version = "0.0";
+            String version = "";
             String minimumVersion = "0.0";
             String artwork = "";
             String developer = "";
-            String buildVersion = "";
+            String buildVersion = "0.0";
             boolean usesMetaName = false;
             ZipInputStream zipExtractor = new ZipInputStream(connection.getInputStream());
             ZipEntry entry = zipExtractor.getNextEntry();
