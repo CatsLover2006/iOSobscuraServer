@@ -13,11 +13,13 @@ public class App {
         private final Binary binary;
         private final String url;
         private final long size;
+        private final String buildVersion;
         
-        public VersionLink(Binary binary, String url, long size) {
+        public VersionLink(Binary binary, String url, String buildVersion, long size) {
             this.binary = binary;
             this.url = url;
             this.size = size;
+            this.buildVersion = buildVersion;
         }
         
         public JSONObject toJSON() {
@@ -27,6 +29,7 @@ public class App {
                 object.put("bin", binary.toJSON());
             }
             object.put("fs", size);
+            object.put("bv", buildVersion);
             return object;
         }
         
@@ -49,6 +52,10 @@ public class App {
             }
             char prefix = prefixes[prefixIndex];
             return (Math.round(Math.floor(size / Math.pow(1024, prefixIndex)) / 102.4) / 10.0) + (prefix + "B");
+        }
+
+        public String getBuildVersion() {
+            return buildVersion;
         }
     }
     

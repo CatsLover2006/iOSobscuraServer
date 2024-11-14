@@ -14,19 +14,19 @@ public class AppListTest {
     @Test
     public void TestApp() {
         App app = new App("Test app", "ca.litten.test");
-        app.addAppVersionNoSort("1.0.3", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.0.3.ipa", 0),
-                new App.VersionLink(null,"http://backup.litten.ca/test.1.0.3.ipa", 0)}, "5.1.1");
-        app.addAppVersionNoSort("1.0", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.0.0.ipa", 0)}, "5.2");
-        app.addAppVersionNoSort("1.0.1", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.0.1.ipa", 0)}, "5.2");
-        app.addAppVersionNoSort("1.0.2", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.0.2.ipa", 0)}, "5.2");
-        app.addAppVersionNoSort("1.1", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.1.ipa", 0),
-                new App.VersionLink(null,"http://backup.litten.ca/test.1.1.ipa", 0)}, "6.0");
-        app.addAppVersionNoSort("1.1.1", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.1.1.ipa", 0),
-                new App.VersionLink(null,"http://backup.litten.ca/test.1.1.1.ipa", 0)}, "6.1.3");
-        app.addAppVersionNoSort("1.1.2", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.1.2.ipa", 0),
-                new App.VersionLink(null,"http://backup.litten.ca/test.1.1.2.ipa", 0)}, "6.1.3");
-        app.addAppVersion("1.1.3", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.1.3.ipa", 0),
-                new App.VersionLink(null,"http://backup.litten.ca/test.1.1.3.ipa", 0)}, "6.1");
+        app.addAppVersionNoSort("1.0.3", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.0.3.ipa", "0", 0),
+                new App.VersionLink(null,"http://backup.litten.ca/test.1.0.3.ipa", "0", 0)}, "5.1.1");
+        app.addAppVersionNoSort("1.0", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.0.0.ipa", "0", 0)}, "5.2");
+        app.addAppVersionNoSort("1.0.1", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.0.1.ipa", "0", 0)}, "5.2");
+        app.addAppVersionNoSort("1.0.2", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.0.2.ipa", "0", 0)}, "5.2");
+        app.addAppVersionNoSort("1.1", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.1.ipa", "0", 0),
+                new App.VersionLink(null,"http://backup.litten.ca/test.1.1.ipa", "0", 0)}, "6.0");
+        app.addAppVersionNoSort("1.1.1", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.1.1.ipa", "0", 0),
+                new App.VersionLink(null,"http://backup.litten.ca/test.1.1.1.ipa", "0", 0)}, "6.1.3");
+        app.addAppVersionNoSort("1.1.2", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.1.2.ipa", "0", 0),
+                new App.VersionLink(null,"http://backup.litten.ca/test.1.1.2.ipa", "0", 0)}, "6.1.3");
+        app.addAppVersion("1.1.3", new App.VersionLink[]{new App.VersionLink(null,"http://litten.ca/test.1.1.3.ipa", "0", 0),
+                new App.VersionLink(null,"http://backup.litten.ca/test.1.1.3.ipa", "0", 0)}, "6.1");
         assertEquals("5.1.1", app.getEarliestSupportedVersion());
         assertEquals("ca.litten.test", app.getBundleID());
         assertEquals("Test app", app.getName());

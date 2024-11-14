@@ -39,6 +39,7 @@ public class AppDownloader {
             String minimumVersion = "0.0";
             String artwork = "";
             String developer = "";
+            String buildVersion = "";
             boolean usesMetaName = false;
             ZipInputStream zipExtractor = new ZipInputStream(connection.getInputStream());
             ZipEntry entry = zipExtractor.getNextEntry();
@@ -76,10 +77,16 @@ public class AppDownloader {
                                     bundleID = str;
                                     break;
                                 }
+                                case "CFBundleShortVersionString": {
+                                    String str = String.valueOf(parsedData.get("CFBundleShortVersionString"));
+                                    if (str.equals("null")) break;
+                                    version = str;
+                                    break;
+                                }
                                 case "CFBundleVersion": {
                                     String str = String.valueOf(parsedData.get("CFBundleVersion"));
                                     if (str.equals("null")) break;
-                                    version = str;
+                                    buildVersion = str;
                                     break;
                                 }
                                 case "MinimumOSVersion": {
@@ -188,6 +195,7 @@ public class AppDownloader {
             } catch (EOFException e) {
                 System.err.println("Unexpected end of ZIP file; continuing with parsing...");
             }
+            if (version.isEmpty()) version = buildVersion;
             Binary binary = null;
             if (iconName.isEmpty()) iconName = "icon.png"; // Just in cased
             BufferedImage iconImage = null;
@@ -302,7 +310,7 @@ public class AppDownloader {
             }
             app.updateArtwork(version, artwork);
             app.updateDeveloper(version, developer);
-            app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString(), size)}, minimumVersion);
+            app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString(), buildVersion, size)}, minimumVersion);
         } catch (Throwable e) {
             System.err.println(e);
         }

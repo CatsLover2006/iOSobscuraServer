@@ -43,7 +43,7 @@ public class AppList {
                         if (object.has("bin")) {
                             binary = object.getJSONObject("bin");
                         }
-                        versionLinks.add(new App.VersionLink(Binary.fromJSON(binary), object.getString("url"), object.getLong("fs")));
+                        versionLinks.add(new App.VersionLink(Binary.fromJSON(binary), object.getString("url"), object.getString("bv"), object.getLong("fs")));
                     }
                     app.addAppVersionNoSort(versionJSON.getString("ver"),
                             versionLinks.toArray(new App.VersionLink[]{}),
