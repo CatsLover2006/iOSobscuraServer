@@ -94,23 +94,22 @@ public class AppDownloader {
                                     binaryName = str;
                                     break;
                                 }
-                                case "CFBundleIconFiles": {
+                                case "CFBundleIcons": {
                                     if (!iconName.isEmpty()) break;
                                     try {
-                                        NSArray icons = (NSArray) parsedData.get("CFBundleIconFiles");
+                                        NSArray icons = (NSArray) ((NSDictionary) ((NSDictionary) parsedData.get("CFBundleIcons"))
+                                                .get("CFBundlePrimaryIcon")).get("CFBundleIconFiles");
                                         iconName = icons.objectAtIndex(0).toString();
                                         if (!iconName.endsWith(".png"))
                                             iconName += "@2x.png";
                                     } catch (Throwable e) {
                                         // Do nothing
                                     }
-                                    break;
                                 }
-                                case "CFBundleIcons": {
+                                case "CFBundleIconFiles": {
                                     if (!iconName.isEmpty()) break;
                                     try {
-                                        NSArray icons = (NSArray) ((NSDictionary) ((NSDictionary) parsedData.get("CFBundleIcons"))
-                                                .get("CFBundlePrimaryIcon")).get("CFBundleIconFiles");
+                                        NSArray icons = (NSArray) parsedData.get("CFBundleIconFiles");
                                         iconName = icons.objectAtIndex(0).toString();
                                         if (!iconName.endsWith(".png"))
                                             iconName += "@2x.png";
