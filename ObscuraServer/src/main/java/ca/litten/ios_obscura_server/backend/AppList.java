@@ -12,10 +12,10 @@ public class AppList {
     private static final ArrayList<App> apps = new ArrayList<>();
 
     public static void loadAppDatabaseFile(File file) {
-        loadAppDatabaseFile(file, false);
+        loadAppDatabaseFile(file, false, false);
     }
     
-    public static void loadAppDatabaseFile(File file, boolean skipEmptyIcons) {
+    public static void loadAppDatabaseFile(File file, boolean skipEmptyIcons, boolean skipDataIcons) {
         try {
             FileReader reader = new FileReader(file);
             StringBuilder out = new StringBuilder();
@@ -31,6 +31,7 @@ public class AppList {
             for (Object appObject : appArray) {
                 JSONObject appJSON = (JSONObject) appObject;
                 if (skipEmptyIcons && appJSON.getString("art").isEmpty()) continue;
+                if (skipDataIcons && appJSON.getString("art").startsWith("data")) continue;
                 App app = new App(appJSON.getString("name"), appJSON.getString("bundle"));
                 for (Object versionObject : appJSON.getJSONArray("versions")) {
                     JSONObject versionJSON = (JSONObject) versionObject;

@@ -108,6 +108,7 @@ public class Main {
     public static void main(String[] args) {
         if (Arrays.asList(args).contains("--help")) {
             System.out.println("--skipNoAppIcon: skips apps with no app icon when loading the database");
+            System.out.println("--skipDataIcon: skips apps with a data URI icon when loading the database");
             System.out.println("--noParse: disable app parsing to save RAM");
             System.out.println("--help: display this message");
             return;
@@ -131,7 +132,7 @@ public class Main {
             throw new RuntimeException(e);
         }
         System.out.println("Loading database...");
-        AppList.loadAppDatabaseFile(databaseLocation, Arrays.asList(args).contains("--skipNoAppIcon"));
+        AppList.loadAppDatabaseFile(databaseLocation, Arrays.asList(args).contains("--skipNoAppIcon"), Arrays.asList(args).contains("--skipDataIcon"));
         System.out.println("Starting server...");
         try {
             server = new Server();
