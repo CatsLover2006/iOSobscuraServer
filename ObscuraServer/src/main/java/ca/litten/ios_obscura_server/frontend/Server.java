@@ -256,7 +256,10 @@ public class Server {
                     .append(app.getBundleID()).append("\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
                     .append("</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset><label>Versions</label><fieldset>");
-            for (String version : app.getSupportedAppVersions(iOS_ver)) {
+            String[] versions = app.getSupportedAppVersions(iOS_ver);
+            if (versions.length == 0) {
+                out.append("<div><div>No Known Versions</div></div>");
+            } else for (String version : versions) {
                 out.append("<a href=\"/getAppVersionLinks/").append(app.getBundleID()).append("/").append(version)
                         .append("\"><div><div>").append(version).append("</div></div></a>");
             }
