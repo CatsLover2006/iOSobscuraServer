@@ -94,28 +94,27 @@ public class AppDownloader {
                                     binaryName = str;
                                     break;
                                 }
+                                case "CFBundleIconFiles~ipad":
+                                case "CFBundleIcons~ipad":
+                                    if (parsedData.containsKey(key.split("~")[0])) break; // If not, overflow
+                                case "CFBundleIconFiles":
                                 case "CFBundleIcons": {
                                     if (!iconName.isEmpty()) break;
                                     try {
-                                        NSArray icons = (NSArray) ((NSDictionary) ((NSDictionary) parsedData.get("CFBundleIcons"))
+                                        NSArray icons = (NSArray) ((NSDictionary) ((NSDictionary) parsedData.get(key))
                                                 .get("CFBundlePrimaryIcon")).get("CFBundleIconFiles");
                                         iconName = icons.objectAtIndex(0).toString();
-                                        if (!iconName.endsWith(".png"))
-                                            iconName += "@2x.png";
                                     } catch (Throwable e) {
-                                        // Do nothing
+                                        try {
+                                            NSArray icons = (NSArray) parsedData.get(key);
+                                            iconName = icons.objectAtIndex(0).toString();
+                                        } catch (Throwable ex) {
+                                            // Do nothing
+                                        }
                                     }
-                                }
-                                case "CFBundleIconFiles": {
-                                    if (!iconName.isEmpty()) break;
-                                    try {
-                                        NSArray icons = (NSArray) parsedData.get("CFBundleIconFiles");
-                                        iconName = icons.objectAtIndex(0).toString();
-                                        if (!iconName.endsWith(".png"))
-                                            iconName += "@2x.png";
-                                    } catch (Throwable e) {
-                                        // Do nothing
-                                    }
+                                    if (iconName.isEmpty()) break;
+                                    if (!iconName.endsWith(".png"))
+                                        iconName += "@2x.png";
                                     break;
                                 }
                                 case "CFBundleIconFile": {
