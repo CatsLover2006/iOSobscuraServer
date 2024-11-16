@@ -16,6 +16,9 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Server {
@@ -216,6 +219,73 @@ public class Server {
                 outgoingHeaders.set("Location", app.getArtworkURL());
             }
             exchange.sendResponseHeaders(308, 0);
+            exchange.close();
+        });
+        server.createContext("/trollapps").setHandler(exchange -> {
+            JSONObject root = new JSONObject();
+            String now = ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
+            root.put("name", "iPhoneOS Obscura");
+            root.put("website", "https://" + serverName);
+            root.put("iconURL", "https://" + serverName + "/icon");
+            JSONArray appsList = new JSONArray();
+            JSONObject empty = new JSONObject();
+            for (App app : AppList.searchApps("")) {
+                JSONObject appJSON = new JSONObject();
+                appJSON.put("name", app.getName());
+                appJSON.put("bundleIdentifier", app.getBundleID());
+                appJSON.put("developerName", app.getDeveloper());
+                appJSON.put("localizedDescription", "The app with bundle ID: " + app.getBundleID());
+                appJSON.put("iconURL", "https://" + serverName + "/getAppIcon/" + app.getBundleID());
+                appJSON.put("appPermissions", empty);
+                JSONArray versionArr = new JSONArray();
+                for (String version : app.getSupportedAppVersions("999999999")) {
+                    App.VersionLink[] versions = app.getLinksForVersion(version);
+                    for (int i = 0; i < versions.length; i++) {
+                        boolean skip = true;
+                        for (CPUarch arch : CPUarch.values()) {
+                            if (versions[i].getBinary().supportsArchitecture(arch)) {
+                                if (!versions[i].getBinary().architectureEncrypted(arch)) {
+                                    skip = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (skip) continue;
+                        JSONObject versionObject = new JSONObject();
+                        versionObject.put("version", version);
+                        versionObject.put("buildVersion", versions[i].getBuildVersion());
+                        versionObject.put("marketingVersion", version + " (" + versions[i].getBuildVersion() + ") #" + i);
+                        String url = versions[i].getUrl();
+                        StringBuilder description = new StringBuilder();
+                        description.append("#").append(i + 1).append(", ").append(versions[i].getUrl().split("//")[1].split("/")[0]);
+                        if (url.split("//")[1].split("/")[0].contains("archive.org"))
+                            description.append(", ").append(versions[i].getUrl().split("//")[1].split("/")[2]);
+                        if (url.startsWith("https"))
+                            description.append(", SSL");
+                        versionObject.put("downloadURL", url);
+                        versionObject.put("date", now);
+                        versionObject.put("localizedDescription", description.toString());
+                        versionObject.put("minOSVersion", app.getCompatibleVersion(version));
+                        if (!versions[i].getBinary().supportsArchitecture(CPUarch.ARM64) &&
+                                !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64v8) &&
+                                !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64e) &&
+                                !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64e_legacy)) {
+                            versionObject.put("maxOSVersion", "10.99.99");
+                        }
+                        versionObject.put("size", versions[i].getSize());
+                        versionArr.put(versionObject);
+                    }
+                }
+                appJSON.put("versions", versionArr);
+                appsList.put(appJSON);
+            }
+            root.put("apps", appsList);
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            outgoingHeaders.set("Content-Type", "application/json");
+            outgoingHeaders.set("Cache-Control", "max-age=1800,immutable");
+            byte[] bytes = root.toString().getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/getAppVersions/").setHandler(exchange -> {
