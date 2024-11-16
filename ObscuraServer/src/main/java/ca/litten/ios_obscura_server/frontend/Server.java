@@ -238,7 +238,7 @@ public class Server {
                 appJSON.put("localizedDescription", "The app with bundle ID: " + app.getBundleID());
                 appJSON.put("iconURL", "https://" + serverName + "/getAppIcon/" + app.getBundleID());
                 appJSON.put("appPermissions", empty);
-                JSONArray versionArr = new JSONArray();
+                ArrayList<JSONObject> reverseArr = new ArrayList<>();
                 for (String version : app.getSupportedAppVersions("999999999")) {
                     App.VersionLink[] versions = app.getLinksForVersion(version);
                     for (int i = 0; i < versions.length; i++) {
@@ -274,9 +274,10 @@ public class Server {
                             versionObject.put("maxOSVersion", "10.99.99");
                         }
                         versionObject.put("size", versions[i].getSize());
-                        versionArr.put(versionObject);
+                        reverseArr.add(0, versionObject);
                     }
                 }
+                JSONArray versionArr = new JSONArray(reverseArr);
                 if (versionArr.isEmpty()) continue;
                 appJSON.put("versions", versionArr);
                 appsList.put(appJSON);
