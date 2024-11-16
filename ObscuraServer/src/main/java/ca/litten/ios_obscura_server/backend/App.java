@@ -102,6 +102,7 @@ public class App {
     }
     
     public String getName() {
+        if (name.isEmpty()) return bundleID;
         return name;
     }
     
@@ -231,9 +232,12 @@ public class App {
     }
     
     public void updateName(String name) {
-        if (usesMetaName) {
+        if (name.isEmpty()) return;
+        if (this.name.isEmpty()) {
+            this.name = name;
             return;
         }
+        if (usesMetaName) return;
         usesMetaName = true;
         this.name = name;
     }

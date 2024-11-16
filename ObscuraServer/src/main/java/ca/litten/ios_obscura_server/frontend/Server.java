@@ -277,6 +277,7 @@ public class Server {
                         versionArr.put(versionObject);
                     }
                 }
+                if (versionArr.isEmpty()) continue;
                 appJSON.put("versions", versionArr);
                 appsList.put(appJSON);
             }
