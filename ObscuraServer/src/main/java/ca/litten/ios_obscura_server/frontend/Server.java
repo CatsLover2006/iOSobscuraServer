@@ -230,6 +230,7 @@ public class Server {
             JSONArray appsList = new JSONArray();
             JSONObject empty = new JSONObject();
             for (App app : AppList.searchApps("")) {
+                if (app.getAllUrls().size() == 0) continue;
                 JSONObject appJSON = new JSONObject();
                 appJSON.put("name", app.getName());
                 appJSON.put("bundleIdentifier", app.getBundleID());
