@@ -28,6 +28,7 @@ public class Server {
     private static final byte[] mainicon;
     private static final byte[] icon32;
     private static final byte[] icon16;
+    private static final byte[] iconMask7;
     private static long lastReload = 0;
     public static boolean allowReload = false;
     private static String serverName = "localhost";
@@ -46,6 +47,11 @@ public class Server {
             searchIcon7 = new byte[Math.toIntExact(file.length())];
             search7.read(searchIcon7);
             search7.close();
+            file = new File("iconMask7.svg");
+            FileInputStream mask7 = new FileInputStream(file);
+            iconMask7 = new byte[Math.toIntExact(file.length())];
+            mask7.read(iconMask7);
+            mask7.close();
             file = new File("favicon.ico");
             FileInputStream fav = new FileInputStream(file);
             favicon = new byte[Math.toIntExact(file.length())];
@@ -84,7 +90,9 @@ public class Server {
             throw new RuntimeException(e);
         }
     }
-    
+
+    private static final String iOS7mask = "-webkit-mask-image:url(\"/getIconMask7\");-webkit-mask-size:cover;mask-image:url(\"/getIconMask7\");mask-size:cover;";
+
     public Server() throws IOException {
         lastReload = System.currentTimeMillis();
         server = provider.createHttpServer(new InetSocketAddress(port), -1);
@@ -118,7 +126,7 @@ public class Server {
                 random = rand.nextInt(apps.size());
                 app = apps.remove(random);
                 out.append("<a style=\"height:77px\" href=\"getAppVersions/").append(app.getBundleID())
-                        .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px;border-radius:15.625%\" src=\"getAppIcon/")
+                        .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
                     .append(app.getBundleID()).append("\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
                         .append("</center></div></div></a>");
             }
@@ -132,19 +140,22 @@ public class Server {
             exchange.getResponseBody().write(bytes);
             exchange.close();
         });
-        server.createContext("/getCSS/insecure").setHandler(exchange -> {
+        server.createContext("/getCSS").setHandler(exchange -> {
             Headers incomingHeaders = exchange.getRequestHeaders();
             Headers outgoingHeaders = exchange.getResponseHeaders();
             String userAgent = incomingHeaders.get("user-agent").get(0);
             boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
             boolean macOS_connection = userAgent.contains("Macintosh");
-            String out = "http://cydia.saurik.com/cytyle/style-3163da6b7950852a03d31ea77735f4e1d2ba6699.css";
+            StringBuilder out = new StringBuilder();
+            String styleVariant = "3163da6b7950852a03d31ea77735f4e1d2ba6699";
+            String radius = "border-radius:15.625%;";
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
                 String ver = split2[split2.length - 1].replace("_", ".");
                 if (App.isVersionLater("7.0", ver)) {
-                    out = "http://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
+                    styleVariant = "c1ff8b8b33e0b3de6657c943de001d1aff84d634";
+                    radius = iOS7mask;
                 }
             }
             if (macOS_connection) {
@@ -152,40 +163,18 @@ public class Server {
                 String[] split2 = split1[0].split("\\)")[0].split(" ");
                 String ver = split2[split2.length - 1].replace("_", ".");
                 if (App.isVersionLater("10.10", ver)) {
-                    out = "http://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
+                    styleVariant = "c1ff8b8b33e0b3de6657c943de001d1aff84d634";
+                    radius = iOS7mask;
                 }
             }
-            outgoingHeaders.set("Location", out);
+            out.append("@import url(\"https://cydia.saurik.com/cytyle/style-")
+                    .append(styleVariant).append(".css\");@import url(\"http://cydia.saurik.com/cytyle/style-")
+                    .append(styleVariant).append(".css\");img{").append(radius).append("}");
             outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
-            exchange.sendResponseHeaders(308, 0);
-            exchange.close();
-        });
-        server.createContext("/getCSS/secure").setHandler(exchange -> {
-            Headers incomingHeaders = exchange.getRequestHeaders();
-            Headers outgoingHeaders = exchange.getResponseHeaders();
-            String userAgent = incomingHeaders.get("user-agent").get(0);
-            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
-            boolean macOS_connection = userAgent.contains("Macintosh");
-            String out = "https://cydia.saurik.com/cytyle/style-3163da6b7950852a03d31ea77735f4e1d2ba6699.css";
-            if (iOS_connection) {
-                String[] split1 = userAgent.split("like Mac OS X");
-                String[] split2 = split1[0].split(" ");
-                String ver = split2[split2.length - 1].replace("_", ".");
-                if (App.isVersionLater("7.0", ver)) {
-                    out = "https://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
-                }
-            }
-            if (macOS_connection) {
-                String[] split1 = userAgent.split("AppleWebKit");
-                String[] split2 = split1[0].split("\\)")[0].split(" ");
-                String ver = split2[split2.length - 1].replace("_", ".");
-                if (App.isVersionLater("10.10", ver)) {
-                    out = "https://cydia.saurik.com/cytyle/style-c1ff8b8b33e0b3de6657c943de001d1aff84d634.css";
-                }
-            }
-            outgoingHeaders.set("Location", out);
-            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
-            exchange.sendResponseHeaders(308, 0);
+            outgoingHeaders.set("Content-Type", "text/css; charset=utf-8");
+            byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/getHeader").setHandler(exchange -> {
@@ -252,7 +241,7 @@ public class Server {
                 return;
             }
             out.append(Templates.generateBasicHeader(app.getName()))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px;border-radius:15.625%\" src=\"/getAppIcon/")
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
                     .append("</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset><label>Versions</label><fieldset>");
@@ -330,7 +319,7 @@ public class Server {
                 return;
             }
             out.append(Templates.generateBasicHeader(app.getName()))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px;border-radius:15.625%\" src=\"/getAppIcon/")
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
                     .append("</div></div><div><div style=\"overflow:auto\">Version ").append(splitURI[3])
@@ -449,7 +438,7 @@ public class Server {
                     for (int i = 0; i < Math.min(20, s); i++) {
                         app = apps.remove(0);
                         out.append("<a style=\"height:77px\" href=\"/getAppVersions/").append(app.getBundleID())
-                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px;border-radius:15.625%\" src=\"/getAppIcon/")
+                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
                                 .append(app.getBundleID()).append("\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
                                 .append("</center></div></div></a>");
                     }
@@ -518,6 +507,14 @@ public class Server {
             outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(200, favicon.length);
             exchange.getResponseBody().write(favicon);
+            exchange.close();
+        });
+        server.createContext("/getIconMask7").setHandler(exchange -> {
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            outgoingHeaders.set("Content-Type", "image/svg+xml");
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
+            exchange.sendResponseHeaders(200, iconMask7.length);
+            exchange.getResponseBody().write(iconMask7);
             exchange.close();
         });
         server.createContext("/reload").setHandler(exchange -> {
