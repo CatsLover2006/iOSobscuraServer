@@ -203,7 +203,7 @@ public class Server {
             App app = AppList.getAppByBundleID(splitURI[2]);
             outgoingHeaders.set("Cache-Control", "max-age=1800,immutable");
             if (app == null || app.getArtworkURL().isEmpty()) {
-                outgoingHeaders.set("Location", "https://files.scottshar.es/Share%20Sheets/app-icons/Placeholder-Icon.png");
+                outgoingHeaders.set("Location", "/icon");
             } else if (app.getArtworkURL().startsWith("data")) {
                 String[] relevantData = app.getArtworkURL().split(";");
                 outgoingHeaders.set("Content-Type", relevantData[0].split(":")[1]);
