@@ -20,6 +20,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Server {
     private final HttpServer server;
@@ -227,61 +228,60 @@ public class Server {
             root.put("name", "iPhoneOS Obscura");
             root.put("website", "https://" + serverName);
             root.put("iconURL", "https://" + serverName + "/icon");
-            JSONArray appsList = new JSONArray();
             JSONObject empty = new JSONObject();
-            for (App app : AppList.searchApps("")) {
-                if (app.getAllUrls().size() == 0) continue;
-                JSONObject appJSON = new JSONObject();
-                appJSON.put("name", app.getName());
-                appJSON.put("bundleIdentifier", app.getBundleID());
-                appJSON.put("developerName", app.getDeveloper());
-                appJSON.put("localizedDescription", "The app with bundle ID: " + app.getBundleID());
-                appJSON.put("iconURL", "https://" + serverName + "/getAppIcon/" + app.getBundleID());
-                appJSON.put("appPermissions", empty);
-                ArrayList<JSONObject> reverseArr = new ArrayList<>();
-                for (String version : app.getSupportedAppVersions("999999999")) {
-                    App.VersionLink[] versions = app.getLinksForVersion(version);
-                    for (int i = 0; i < versions.length; i++) {
-                        boolean skip = true;
-                        for (CPUarch arch : CPUarch.values()) {
-                            if (versions[i].getBinary().supportsArchitecture(arch)) {
-                                if (!versions[i].getBinary().architectureEncrypted(arch)) {
-                                    skip = false;
-                                    break;
+            JSONArray appsList = new JSONArray(AppList.searchApps("").parallelStream().map(app -> {
+                    if (app.getAllUrls().isEmpty()) return null;
+                    JSONObject appJSON = new JSONObject();
+                    appJSON.put("name", app.getName());
+                    appJSON.put("bundleIdentifier", app.getBundleID());
+                    appJSON.put("developerName", app.getDeveloper());
+                    appJSON.put("localizedDescription", "The app with bundle ID: " + app.getBundleID());
+                    appJSON.put("iconURL", "https://" + serverName + "/getAppIcon/" + app.getBundleID());
+                    appJSON.put("appPermissions", empty);
+                    ArrayList<JSONObject> reverseArr = new ArrayList<>();
+                    for (String version : app.getSupportedAppVersions("999999999")) {
+                        App.VersionLink[] versions = app.getLinksForVersion(version);
+                        for (int i = 0; i < versions.length; i++) {
+                            boolean skip = true;
+                            for (CPUarch arch : CPUarch.values()) {
+                                if (versions[i].getBinary().supportsArchitecture(arch)) {
+                                    if (!versions[i].getBinary().architectureEncrypted(arch)) {
+                                        skip = false;
+                                        break;
+                                    }
                                 }
                             }
+                            if (skip) continue;
+                            JSONObject versionObject = new JSONObject();
+                            versionObject.put("version", version);
+                            versionObject.put("buildVersion", versions[i].getBuildVersion());
+                            versionObject.put("marketingVersion", version + " (" + versions[i].getBuildVersion() + ") #" + i);
+                            String url = versions[i].getUrl();
+                            StringBuilder description = new StringBuilder();
+                            description.append("#").append(i + 1).append(", ").append(versions[i].getUrl().split("//")[1].split("/")[0]);
+                            if (url.split("//")[1].split("/")[0].contains("archive.org"))
+                                description.append(", ").append(versions[i].getUrl().split("//")[1].split("/")[2]);
+                            if (url.startsWith("https"))
+                                description.append(", SSL");
+                            versionObject.put("downloadURL", url);
+                            versionObject.put("date", now);
+                            versionObject.put("localizedDescription", description.toString());
+                            versionObject.put("minOSVersion", app.getCompatibleVersion(version));
+                            if (!versions[i].getBinary().supportsArchitecture(CPUarch.ARM64) &&
+                                    !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64v8) &&
+                                    !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64e) &&
+                                    !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64e_legacy)) {
+                                versionObject.put("maxOSVersion", "10.99.99");
+                            }
+                            versionObject.put("size", versions[i].getSize());
+                            reverseArr.add(0, versionObject);
                         }
-                        if (skip) continue;
-                        JSONObject versionObject = new JSONObject();
-                        versionObject.put("version", version);
-                        versionObject.put("buildVersion", versions[i].getBuildVersion());
-                        versionObject.put("marketingVersion", version + " (" + versions[i].getBuildVersion() + ") #" + i);
-                        String url = versions[i].getUrl();
-                        StringBuilder description = new StringBuilder();
-                        description.append("#").append(i + 1).append(", ").append(versions[i].getUrl().split("//")[1].split("/")[0]);
-                        if (url.split("//")[1].split("/")[0].contains("archive.org"))
-                            description.append(", ").append(versions[i].getUrl().split("//")[1].split("/")[2]);
-                        if (url.startsWith("https"))
-                            description.append(", SSL");
-                        versionObject.put("downloadURL", url);
-                        versionObject.put("date", now);
-                        versionObject.put("localizedDescription", description.toString());
-                        versionObject.put("minOSVersion", app.getCompatibleVersion(version));
-                        if (!versions[i].getBinary().supportsArchitecture(CPUarch.ARM64) &&
-                                !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64v8) &&
-                                !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64e) &&
-                                !versions[i].getBinary().supportsArchitecture(CPUarch.ARM64e_legacy)) {
-                            versionObject.put("maxOSVersion", "10.99.99");
-                        }
-                        versionObject.put("size", versions[i].getSize());
-                        reverseArr.add(0, versionObject);
                     }
-                }
-                JSONArray versionArr = new JSONArray(reverseArr);
-                if (versionArr.isEmpty()) continue;
-                appJSON.put("versions", versionArr);
-                appsList.put(appJSON);
-            }
+                    if (reverseArr.isEmpty()) return null;
+                    JSONArray versionArr = new JSONArray(reverseArr);
+                    appJSON.put("versions", versionArr);
+                    return appJSON;
+                }).filter(json -> json != null).collect(Collectors.toList()));
             root.put("apps", appsList);
             Headers outgoingHeaders = exchange.getResponseHeaders();
             outgoingHeaders.set("Content-Type", "application/json");
