@@ -217,8 +217,8 @@ public class App {
             } catch (NumberFormatException e) {
                 try {
                     int comp = support[i].compareTo(check[i]);
-                    if (comp < 0) return false;
-                    if (comp > 0) return true;
+                    if (comp < 0) return true;
+                    if (comp > 0) return false;
                 } catch (IndexOutOfBoundsException f) {
                     return support.length < check.length;
                 }
