@@ -151,28 +151,30 @@ public class Main {
         server.startServer();
         System.out.println("Started server.");
         while (true) {
-            Server.allowReload = false;
-            if (Arrays.stream(args).noneMatch(a -> a.equals("--noParse"))) {
-                ArchiveParser archiveParser = new ArchiveParser();
-                archiveParser.start();
-                while (archiveParser.isAlive()) {
-                    try {
-                        Thread.sleep(1000 * 60 * 2);
-                    } catch (InterruptedException e) {
+            try {
+                Server.allowReload = false;
+                if (Arrays.stream(args).noneMatch(a -> a.equals("--noParse"))) {
+                    ArchiveParser archiveParser = new ArchiveParser();
+                    archiveParser.start();
+                    while (archiveParser.isAlive()) {
+                        try {
+                            Thread.sleep(1000 * 60 * 2);
+                        } catch (InterruptedException e) {
+                            System.out.println("Saving database...");
+                            AppList.saveAppDatabaseFile(databaseLocation);
+                            System.out.println("Saved database!");
+                            break;
+                        }
                         System.out.println("Saving database...");
                         AppList.saveAppDatabaseFile(databaseLocation);
-                        break;
+                        System.out.println("Saved database!");
                     }
-                    System.out.println("Saving database...");
-                    AppList.saveAppDatabaseFile(databaseLocation);
+                    System.out.println("Finished parsing!");
                 }
-                System.out.println("Finished parsing!");
-            }
-            Server.allowReload = true;
-            try {
+                Server.allowReload = true;
                 Thread.sleep(1000 * 60 * 60 * 24);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            } catch (Throwable e) {
+                e.printStackTrace();
             }
         }
     }
