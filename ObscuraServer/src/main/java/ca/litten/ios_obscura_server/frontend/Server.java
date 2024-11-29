@@ -450,6 +450,39 @@ public class Server {
             exchange.getResponseBody().write(bytes);
             exchange.close();
         });
+        server.createContext("/htmlSitemap").setHandler(exchange -> {
+            StringBuilder out = new StringBuilder();
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            outgoingHeaders.set("Content-Type", "text/html; charset=utf-8");
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            String iOS_ver = "99999999";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                iOS_ver = split2[split2.length - 1].replace("_", ".");
+            }
+            out.append(Templates.generateBasicHeader("HTML Sitemap"))
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><strong>HTML Sitemap</strong></div></div>");
+            out.append("<a href=\"https://").append(serverName).append("/\"><div><div>Homepage</div></div></a></fieldset>");
+            for (App app : AppList.searchApps("", iOS_ver)) {
+                out.append("<label>").append(app.getBundleID()).append("</label><fieldset><a style=\"height:77px\" href=\"getAppVersions/")
+                        .append(app.getBundleID()).append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
+                        .append(app.getBundleID()).append("\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
+                        .append("</center></div></div></a>");
+                for (String version : app.getSupportedAppVersions(iOS_ver))
+                    out.append("<a href=\"/getAppVersionLinks/").append(app.getBundleID()).append("/").append(version)
+                            .append("\"><div><div>").append(version).append("</div></div></a>");
+                out.append("</fieldset>");
+            }
+            out.append("</panel></body></html>");
+            byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
         server.createContext("/sitemap").setHandler(exchange -> {
             StringBuilder out = new StringBuilder();
             Headers outgoingHeaders = exchange.getResponseHeaders();
