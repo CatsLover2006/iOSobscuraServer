@@ -130,7 +130,9 @@ public class Server {
             App app;
             int random;
             int s = apps.size();
-            for (int i = 0; i < Math.min(20, s); i++) {
+            if (s == 0) {
+                out.append("<div><div>No apps could be found.</div></div>");
+            } else for (int i = 0; i < Math.min(20, s); i++) {
                 random = rand.nextInt(apps.size());
                 app = apps.remove(random);
                 out.append("<a style=\"height:77px\" href=\"getAppVersions/").append(app.getBundleID())
