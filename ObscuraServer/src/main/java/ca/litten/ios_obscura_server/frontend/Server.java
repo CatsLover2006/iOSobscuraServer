@@ -395,7 +395,7 @@ public class Server {
                 exchange.close();
                 return;
             }
-            out.append(Templates.generateBasicHeader(app.getName(), headerTag))
+            out.append(Templates.generateBasicHeader(app.getName() + " " + splitURI[3], headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
