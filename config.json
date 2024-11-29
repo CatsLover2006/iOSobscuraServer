@@ -1,6 +1,7 @@
 {
     "host": "iphoneosobscura.litten.ca",
     "donate_url": "",
+    "header_tags": "",
     "database_location": "db.json",
     "port": 12345,
     "archive_org_archives": [

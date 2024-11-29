@@ -37,7 +37,9 @@ public class Server {
     public static boolean allowReload = false;
     private static String serverName = "localhost";
     private static String donateURL = "";
+    private static String headerTag = "";
     private static int port;
+    private static ErrorPageCreator errorPages;
     
     static {
         try {
@@ -89,6 +91,8 @@ public class Server {
             JSONObject object = new JSONObject(out.toString());
             serverName = object.getString("host");
             donateURL = object.getString("donate_url");
+            headerTag = object.getString("header_tags");
+            errorPages = new ErrorPageCreator(headerTag);
             port = object.getInt("port");
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -113,14 +117,14 @@ public class Server {
                 iOS_ver = split2[split2.length - 1].replace("_", ".");
             }
             if (!(exchange.getRequestURI().toString().equals("/") || exchange.getRequestURI().toString().isEmpty())) {
-                byte[] bytes = ErrorPages.general404.getBytes(StandardCharsets.UTF_8);
+                byte[] bytes = errorPages.general404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
                 exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
             StringBuilder out = new StringBuilder();
-            out.append(Templates.generateBasicHeader("iOS Obscura Locator"))
+            out.append(Templates.generateBasicHeader("iOS Obscura Locator", headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>iPhoneOS Obscura Locator Homepage</strong></center></div></div><div><div><form action=\"searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div></fieldset><label>Some Apps</label><fieldset>");
             List<App> apps = AppList.listAppsThatSupportVersion(iOS_ver);
             App app;
@@ -307,13 +311,13 @@ public class Server {
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
             App app = AppList.getAppByBundleID(splitURI[2]);
             if (app == null) {
-                byte[] bytes = ErrorPages.app404.getBytes(StandardCharsets.UTF_8);
+                byte[] bytes = errorPages.app404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
                 exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
-            out.append(Templates.generateBasicHeader(app.getName()))
+            out.append(Templates.generateBasicHeader(app.getName(), headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
@@ -338,8 +342,8 @@ public class Server {
             App app = AppList.getAppByBundleID(splitURI[2]);
             if (app == null) {
                 outgoingHeaders.set("Content-Type", "text/html");
-                exchange.sendResponseHeaders(404, ErrorPages.app404.length());
-                exchange.getResponseBody().write(ErrorPages.app404.getBytes(StandardCharsets.UTF_8));
+                exchange.sendResponseHeaders(404, errorPages.app404.length());
+                exchange.getResponseBody().write(errorPages.app404.getBytes(StandardCharsets.UTF_8));
                 exchange.close();
                 return;
             }
@@ -385,13 +389,13 @@ public class Server {
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
             App app = AppList.getAppByBundleID(splitURI[2]);
             if (app == null) {
-                byte[] bytes = ErrorPages.app404.getBytes(StandardCharsets.UTF_8);
+                byte[] bytes = errorPages.app404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
                 exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
-            out.append(Templates.generateBasicHeader(app.getName()))
+            out.append(Templates.generateBasicHeader(app.getName(), headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
@@ -463,7 +467,7 @@ public class Server {
                 String[] split2 = split1[0].split(" ");
                 iOS_ver = split2[split2.length - 1].replace("_", ".");
             }
-            out.append(Templates.generateBasicHeader("HTML Sitemap"))
+            out.append(Templates.generateBasicHeader("HTML Sitemap", headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><strong>HTML Sitemap</strong></div></div>");
             out.append("<a href=\"https://").append(serverName).append("/\"><div><div>Homepage</div></div></a></fieldset>");
             for (App app : AppList.searchApps("", iOS_ver)) {
@@ -529,7 +533,7 @@ public class Server {
             } catch (IndexOutOfBoundsException e) {
                 query = "";
             }
-            out.append(Templates.generateBasicHeader("Search: " + query))
+            out.append(Templates.generateBasicHeader("Search: " + query, headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div>")
                     .append("<div><div><form action=\"/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
                     .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
