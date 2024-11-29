@@ -36,7 +36,7 @@ public class AppDownloader {
             String appName = "";
             String bundleID = "nil";
             String version = "";
-            String minimumVersion = "0.0";
+            String minimumVersion = "1.2";
             String artwork = "";
             String developer = "";
             String buildVersion = "0.0";
