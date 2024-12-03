@@ -150,12 +150,15 @@ public class Main {
         }
         server.startServer();
         System.out.println("Started server.");
+        ArchiveParser archiveParser = null;
         while (true) {
             try {
                 Server.allowReload = false;
                 if (Arrays.stream(args).noneMatch(a -> a.equals("--noParse"))) {
-                    ArchiveParser archiveParser = new ArchiveParser();
-                    archiveParser.start();
+                    if (archiveParser == null || !archiveParser.isAlive()) {
+                        archiveParser = new ArchiveParser();
+                        archiveParser.start();
+                    }
                     while (archiveParser.isAlive()) {
                         try {
                             Thread.sleep(1000 * 60 * 2);
