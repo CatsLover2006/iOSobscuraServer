@@ -32,6 +32,7 @@ public class AppDownloader {
             {
                 boolean keepGoing = true;
                 int redirects = 0;
+                int rCode = 0;
                 while (keepGoing) {
                     connection = (HttpURLConnection) tURL.openConnection();
                     connection.setInstanceFollowRedirects(false);
@@ -40,7 +41,7 @@ public class AppDownloader {
                     switch (connection.getResponseCode() / 100) {
                         case 2: { // Success
                             if (connection.getResponseCode() == 204) {
-                                System.out.println(url + " -> " + tURL + " ~ 204");
+                                System.err.println(url + " -> " + tURL + " ~ 204");
                                 return;
                             }
                             keepGoing = false;
@@ -52,7 +53,7 @@ public class AppDownloader {
                             tURL = new URL(tURL, location);
                             redirects++;
                             if (redirects > 10) {
-                                System.out.println(url + " -> " + tURL + " ~ Redirect Hell");
+                                System.err.println(url + " -> " + tURL + " ~ Redirect Hell");
                                 return;
                             }
                             break;
@@ -60,17 +61,18 @@ public class AppDownloader {
                         case 4:    // Client error (mostly for 404s)
                         case 5:    // Server error
                         default: { // Catchall for other errors
-                            System.out.println(url + " -> " + tURL + " ~ " + connection.getResponseCode());
+                            System.err.println(url + " -> " + tURL + " ~ " + connection.getResponseCode());
                             return;
                         }
                     }
+                    rCode = connection.getResponseCode();
                     connection.disconnect();
                 }
+                System.out.println(url + " -> " + tURL + " ~ " + rCode);
             }
             connection = (HttpURLConnection) tURL.openConnection();
             connection.setRequestMethod("GET");
             connection.connect();
-            System.out.println(url + " -> " + tURL);
             long size = connection.getContentLengthLong();
             String appName = "";
             String bundleID = "nil";
@@ -252,8 +254,11 @@ public class AppDownloader {
                         imageCheck.connect();
                         switch (imageCheck.getResponseCode() / 100) {
                             case 2: { // Success
-                                if (imageCheck.getResponseCode() == 204)
+                                if (imageCheck.getResponseCode() == 204) {
+                                    System.err.println(artwork + " -> " + imageUrl + " ~ 204");
                                     artwork = ""; // No content here lol
+                                } else
+                                    System.out.println(artwork + " -> " + imageUrl + " ~ " + connection.getResponseCode());
                                 keepGoing = false;
                                 break;
                             }
@@ -263,7 +268,7 @@ public class AppDownloader {
                                 imageUrl = new URL(imageUrl, location);
                                 redirects++;
                                 if (redirects > 10) {
-                                    System.err.println("Too many redirects");
+                                    System.err.println(artwork + " -> " + imageUrl + " ~ Redirect Hell");
                                     artwork = "";
                                     keepGoing = false;
                                 }
@@ -272,6 +277,7 @@ public class AppDownloader {
                             case 4:    // Client error (mostly for 404s)
                             case 5:    // Server error
                             default: { // Catchall for other errors
+                                System.err.println(artwork + " -> " + imageUrl + " ~ " + connection.getResponseCode());
                                 artwork = "";
                                 keepGoing = false;
                                 break;
