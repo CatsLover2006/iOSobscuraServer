@@ -240,6 +240,7 @@ public class AppDownloader {
                                 break;
                             }
                         }
+                        imageCheck.disconnect();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
