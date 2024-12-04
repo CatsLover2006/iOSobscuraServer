@@ -15,8 +15,10 @@ import javax.imageio.stream.MemoryCacheImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.HttpRetryException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.zip.ZipEntry;
@@ -201,6 +203,50 @@ public class AppDownloader {
             BufferedImage iconImage = null;
             iconName = iconName.toLowerCase();
             binaryName = binaryName.toLowerCase();
+            if (!artwork.isEmpty()) {
+                try {
+                    URL imageUrl = new URL(artwork);
+                    int redirects = 0;
+                    boolean keepGoing = true;
+                    while (keepGoing) {
+                        HttpURLConnection imageCheck = (HttpURLConnection) imageUrl.openConnection();
+                        imageCheck.setInstanceFollowRedirects(false); // We want to count redirects
+                        imageCheck.setRequestMethod("HEAD");
+                        imageCheck.connect();
+                        switch (imageCheck.getResponseCode() / 100) {
+                            case 2: { // Success
+                                if (imageCheck.getResponseCode() == 204)
+                                    artwork = ""; // No content here lol
+                                keepGoing = false;
+                                break;
+                            }
+                            case 3: { // Redirect
+                                String location = imageCheck.getHeaderField("Location");
+                                location = URLDecoder.decode(location, "UTF-8");
+                                imageUrl = new URL(imageUrl, location);
+                                redirects++;
+                                if (redirects > 16) {
+                                    System.err.println("Too many redirects");
+                                    artwork = "";
+                                    keepGoing = false;
+                                }
+                                break;
+                            }
+                            case 4:    // Client error (mostly for 404s)
+                            case 5:    // Server error
+                            default: { // Catchall for other errors
+                                artwork = "";
+                                keepGoing = false;
+                                break;
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.err.println("Error when checking image URL.");
+                    artwork = "";
+                }
+            }
             try {
                 while (entry != null) {
                     if (entry.getName().toLowerCase().contains("/watch/")) {
