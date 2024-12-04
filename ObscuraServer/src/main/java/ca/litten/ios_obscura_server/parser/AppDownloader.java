@@ -40,7 +40,7 @@ public class AppDownloader {
                     switch (connection.getResponseCode() / 100) {
                         case 2: { // Success
                             if (connection.getResponseCode() == 204) {
-                                System.err.println("No app here");
+                                System.out.println(url + " -> " + tURL + " ~ 204");
                                 return;
                             }
                             keepGoing = false;
@@ -52,7 +52,7 @@ public class AppDownloader {
                             tURL = new URL(tURL, location);
                             redirects++;
                             if (redirects > 10) {
-                                System.err.println("Too many redirects");
+                                System.out.println(url + " -> " + tURL + " ~ Redirect Hell");
                                 return;
                             }
                             break;
@@ -60,6 +60,7 @@ public class AppDownloader {
                         case 4:    // Client error (mostly for 404s)
                         case 5:    // Server error
                         default: { // Catchall for other errors
+                            System.out.println(url + " -> " + tURL + " ~ " + connection.getResponseCode());
                             return;
                         }
                     }
