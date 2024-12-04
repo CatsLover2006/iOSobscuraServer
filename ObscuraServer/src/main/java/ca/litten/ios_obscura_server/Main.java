@@ -138,8 +138,8 @@ public class Main {
         if (AppList.getAppByBundleID("nil") == null) {
             System.out.println("New database? Adding broken apps entry...");
             App app = new App("Broken Apps", "nil");
-            app.updateArtwork("0.0", "http://www.mmocentralforums.com/gallery/data/1442/Finder-sad.png");
-            app.updateDeveloper("0.0", "Nobody in Particular");
+            app.updateArtwork("-1", "http://www.mmocentralforums.com/gallery/data/1442/Finder-sad.png");
+            app.updateDeveloper("-1", "Nobody in Particular");
             AppList.addApp(app);
         }
         System.out.println("Starting server...");
