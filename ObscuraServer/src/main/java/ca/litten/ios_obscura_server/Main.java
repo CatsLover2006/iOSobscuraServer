@@ -53,7 +53,7 @@ public class Main {
                 return;
             }
             Thread task;
-            Thread[] tasks = new Thread[Runtime.getRuntime().availableProcessors()];
+            Thread[] tasks = new Thread[Runtime.getRuntime().availableProcessors() * 2];
             task = new Thread(() -> {});
             Arrays.fill(tasks, task);
             System.out.println("Started parser!");
@@ -79,7 +79,6 @@ public class Main {
                 task = new Thread(() -> {
                     try {
                         AppDownloader.downloadAndAddApp(new URL(finalUrl));
-                        System.out.println("Parsed: " + finalUrl);
                     } catch (Exception e) {
                         System.err.println(e);
                     }

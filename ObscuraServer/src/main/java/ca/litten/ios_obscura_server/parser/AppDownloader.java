@@ -49,7 +49,6 @@ public class AppDownloader {
                         }
                         case 3: { // Redirect
                             String location = connection.getHeaderField("Location");
-                            location = URLDecoder.decode(location, "UTF-8");
                             tURL = new URL(tURL, location);
                             redirects++;
                             if (redirects > 10) {
@@ -264,7 +263,6 @@ public class AppDownloader {
                             }
                             case 3: { // Redirect
                                 String location = imageCheck.getHeaderField("Location");
-                                location = URLDecoder.decode(location, "UTF-8");
                                 imageUrl = new URL(imageUrl, location);
                                 redirects++;
                                 if (redirects > 10) {
@@ -403,8 +401,10 @@ public class AppDownloader {
             app.updateArtwork(version, artwork);
             app.updateDeveloper(version, developer);
             app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString(), buildVersion, size)}, minimumVersion);
+            System.out.println("Parsed: " + url);
         } catch (Throwable e) {
-            System.err.println(e);
+            e.printStackTrace();
+            System.out.println("Failed: " + url);
         }
     }
 }
