@@ -27,13 +27,49 @@ import java.util.zip.ZipInputStream;
 public class AppDownloader {
     public static void downloadAndAddApp(URL url) {
         try {
-            HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+            URL tURL = url;
+            HttpURLConnection connection;
+            {
+                boolean keepGoing = true;
+                int redirects = 0;
+                while (keepGoing) {
+                    connection = (HttpURLConnection) tURL.openConnection();
+                    connection.setInstanceFollowRedirects(false);
+                    connection.setRequestMethod("HEAD");
+                    connection.connect();
+                    switch (connection.getResponseCode() / 100) {
+                        case 2: { // Success
+                            if (connection.getResponseCode() == 204) {
+                                System.err.println("No app here");
+                                return;
+                            }
+                            keepGoing = false;
+                            break;
+                        }
+                        case 3: { // Redirect
+                            String location = connection.getHeaderField("Location");
+                            location = URLDecoder.decode(location, "UTF-8");
+                            tURL = new URL(tURL, location);
+                            redirects++;
+                            if (redirects > 10) {
+                                System.err.println("Too many redirects");
+                                return;
+                            }
+                            break;
+                        }
+                        case 4:    // Client error (mostly for 404s)
+                        case 5:    // Server error
+                        default: { // Catchall for other errors
+                            return;
+                        }
+                    }
+                    connection.disconnect();
+                }
+            }
+            connection = (HttpURLConnection) tURL.openConnection();
             connection.setRequestMethod("GET");
             connection.connect();
-            if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND) {
-                System.err.println("Not found");
-                return;
-            }
+            System.out.println(url + " -> " + tURL);
             long size = connection.getContentLengthLong();
             String appName = "";
             String bundleID = "nil";
@@ -273,7 +309,9 @@ public class AppDownloader {
             }
             if (binary == null || (artwork.isEmpty() && iconImage == null)) {
                 connection.disconnect();
-                connection = (HttpURLConnection) url.openConnection();
+                connection = (HttpURLConnection) tURL.openConnection();
+                connection.setRequestMethod("GET");
+                connection.connect();
                 zipExtractor = new ZipInputStream(connection.getInputStream());
                 try {
                     entry = zipExtractor.getNextEntry();
