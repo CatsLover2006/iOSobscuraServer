@@ -225,7 +225,7 @@ public class AppDownloader {
                                 location = URLDecoder.decode(location, "UTF-8");
                                 imageUrl = new URL(imageUrl, location);
                                 redirects++;
-                                if (redirects > 16) {
+                                if (redirects > 10) {
                                     System.err.println("Too many redirects");
                                     artwork = "";
                                     keepGoing = false;
