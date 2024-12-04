@@ -303,7 +303,7 @@ public class AppDownloader {
                         try {
                             iconImage = ImageIO.read(new ByteArrayInputStream(IOUtils.toByteArray(zipExtractor)));
                         } catch (IIOException e) {
-                            System.err.println("Image error");
+                            e.printStackTrace();
                         }
                         if (binary != null) break;
                     }
@@ -333,7 +333,7 @@ public class AppDownloader {
                             try {
                                 iconImage = ImageIO.read(new ByteArrayInputStream(IOUtils.toByteArray(zipExtractor)));
                             } catch (IIOException e) {
-                                System.err.println("Image error");
+                                e.printStackTrace();
                             }
                             if (binary != null) break;
                         }
@@ -354,7 +354,7 @@ public class AppDownloader {
                             try {
                                 iconImage = ImageIO.read(new ByteArrayInputStream(IOUtils.toByteArray(zipExtractor)));
                             } catch (IIOException e) {
-                                System.err.println("Image error");
+                                e.printStackTrace();
                             }
                             break;
                         }
