@@ -13,7 +13,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
@@ -137,8 +139,9 @@ public class Server {
                 app = apps.remove(random);
                 out.append("<a style=\"height:77px\" href=\"getAppVersions/").append(app.getBundleID())
                         .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
-                    .append(app.getBundleID()).append("\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
-                        .append("</center></div></div></a>");
+                        .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                        .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">")
+                        .append(cutStringTo(app.getName(), 15)).append("</center></div></div></a>");
             }
             out.append("</fieldset><fieldset><a href=\"https://github.com/CatsLover2006/iOSobscuraServer\"><div><div>Check out the Github</div></div></a>");
             if (!donateURL.isEmpty())
@@ -205,6 +208,79 @@ public class Server {
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
             exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
+        server.createContext("/getProxiedAppIcon/").setHandler(exchange -> {
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
+            App app = AppList.getAppByBundleID(splitURI[2]);
+            outgoingHeaders.set("Cache-Control", "max-age=1800,immutable");
+            if (app == null || app.getArtworkURL().isEmpty()) {
+                // Continue
+            } else if (app.getArtworkURL().startsWith("data")) {
+                outgoingHeaders.set("Location", "/getAppIcon/" + splitURI[2]);
+                exchange.sendResponseHeaders(308, 0);
+                exchange.close();
+                return;
+            } else if (app.getArtworkURL().startsWith("http")) {
+                URL url = new URL(app.getArtworkURL());
+                URL tURL = url;
+                boolean found = false;
+                HttpURLConnection connection;
+                {
+                    boolean keepGoing = true;
+                    int redirects = 0;
+                    while (keepGoing) {
+                        connection = (HttpURLConnection) tURL.openConnection();
+                        connection.setInstanceFollowRedirects(false);
+                        connection.setRequestMethod("HEAD");
+                        connection.connect();
+                        switch (connection.getResponseCode() / 100) {
+                            case 2: { // Success
+                                found = connection.getResponseCode() != 204;
+                                keepGoing = false;
+                                break;
+                            }
+                            case 3: { // Redirect
+                                String location = connection.getHeaderField("Location");
+                                tURL = new URL(tURL, location);
+                                redirects++;
+                                if (redirects > 10) {
+                                    keepGoing = false;
+                                }
+                                break;
+                            }
+                            case 4:    // Client error (mostly for 404s)
+                            case 5:    // Server error
+                            default: { // Catchall for other errors
+                                keepGoing = false;
+                                break;
+                            }
+                        }
+                        connection.disconnect();
+                    }
+                }
+                if (found) {
+                    connection = (HttpURLConnection) tURL.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.connect();
+                    outgoingHeaders.set("Content-Type", connection.getHeaderField("Content-Type"));
+                    exchange.sendResponseHeaders(200, connection.getContentLength());
+                    InputStream stream = connection.getInputStream();
+                    try {
+                        int read = 0;
+                        byte[] chunk = new byte[1024 * 4];
+                        while ((read = stream.read(chunk)) != -1) {
+                            exchange.getResponseBody().write(chunk, 0, read);
+                        }
+                    } catch (IOException e) {
+                        // Error
+                    }
+                    exchange.close();
+                }
+            }
+            outgoingHeaders.set("Location", "/icon");
+            exchange.sendResponseHeaders(308, 0);
             exchange.close();
         });
         server.createContext("/getAppIcon/").setHandler(exchange -> {
@@ -321,7 +397,8 @@ public class Server {
             }
             out.append(Templates.generateBasicHeader(app.getName(), headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
-                    .append(app.getBundleID()).append("\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
+                    .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                    .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
                     .append("</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset><label>Versions</label><fieldset>");
             String[] versions = app.getSupportedAppVersions(iOS_ver);
@@ -399,7 +476,8 @@ public class Server {
             }
             out.append(Templates.generateBasicHeader(app.getName() + " " + splitURI[3], headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
-                    .append(app.getBundleID()).append("\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
+                    .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                    .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
                     .append("</div></div><div><div style=\"overflow:auto\">Version ").append(splitURI[3])
                     .append("<span style=\"float:right\">Requires iOS ").append(app.getCompatibleVersion(splitURI[3]))
@@ -475,7 +553,8 @@ public class Server {
             for (App app : AppList.searchApps("", iOS_ver)) {
                 out.append("<label>").append(app.getBundleID()).append("</label><fieldset><a style=\"height:77px\" href=\"getAppVersions/")
                         .append(app.getBundleID()).append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
-                        .append(app.getBundleID()).append("\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
+                        .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                        .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
                         .append("</center></div></div></a>");
                 for (String version : app.getSupportedAppVersions(iOS_ver))
                     out.append("<a href=\"/getAppVersionLinks/").append(app.getBundleID()).append("/").append(version)
@@ -551,7 +630,8 @@ public class Server {
                         app = apps.remove(0);
                         out.append("<a style=\"height:77px\" href=\"/getAppVersions/").append(app.getBundleID())
                                 .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
-                                .append(app.getBundleID()).append("\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
+                                .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                                .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
                                 .append("</center></div></div></a>");
                     }
                 }
