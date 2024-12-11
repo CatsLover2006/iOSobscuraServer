@@ -367,28 +367,66 @@ public class AppDownloader {
             if (binary == null) {
                 binary = Binary.fromJSON(new JSONObject());
             }
-            if (artwork.isEmpty() && iconImage != null) {
-                ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
-                ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
-                jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                jpgWriteParam.setCompressionQuality((float) Math.min(0.1 + (0.918 * Math.exp(-0.0131 * iconImage.getWidth())), 1.0));
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                jpgWriter.setOutput(new MemoryCacheImageOutputStream(out));
-                BufferedImage image;
-                if (iconImage.getTransparency() == Transparency.OPAQUE) {
-                    image = iconImage;
-                } else {
-                    image = new BufferedImage(iconImage.getWidth(), iconImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-                    Graphics2D g2d = image.createGraphics();
-                    g2d.setColor(Color.WHITE);
-                    g2d.fillRect(0, 0, image.getWidth(), image.getHeight());
-                    g2d.drawImage(iconImage, 0, 0, null);
-                    g2d.dispose();
+            if (iconImage != null) {
+                if (artwork.isEmpty()) {
+                    try {
+                        ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+                        ImageWriteParam jpgWriteParam = jpgWriter.getDefaultWriteParam();
+                        jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                        jpgWriteParam.setCompressionQuality((float) Math.min(0.1 + (0.918 * Math.exp(-0.0131 *
+                                ((iconImage.getWidth() + iconImage.getHeight()) / 2.0))), 1.0));
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        jpgWriter.setOutput(new MemoryCacheImageOutputStream(out));
+                        BufferedImage image;
+                        if (iconImage.getTransparency() == Transparency.OPAQUE) {
+                            image = iconImage;
+                        } else {
+                            image = new BufferedImage(iconImage.getWidth(), iconImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+                            Graphics2D g2d = image.createGraphics();
+                            g2d.setColor(Color.WHITE);
+                            g2d.fillRect(0, 0, image.getWidth(), image.getHeight());
+                            g2d.drawImage(iconImage, 0, 0, null);
+                            g2d.dispose();
+                        }
+                        jpgWriter.write(null, new IIOImage(image, null, null), jpgWriteParam);
+                        jpgWriter.dispose();
+                        byte[] bytes = out.toByteArray();
+                        artwork = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(bytes);
+                    } catch (Exception e) {
+                        System.err.println("Dynamic-quality JPEG generation failed, moving to static-quality JPEG...");
+                    }
                 }
-                jpgWriter.write(null, new IIOImage(image, null, null), jpgWriteParam);
-                jpgWriter.dispose();
-                byte[] bytes = out.toByteArray();
-                artwork = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(bytes);
+                if (artwork.isEmpty()) {
+                    try {
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        BufferedImage image;
+                        if (iconImage.getTransparency() == Transparency.OPAQUE) {
+                            image = iconImage;
+                        } else {
+                            image = new BufferedImage(iconImage.getWidth(), iconImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+                            Graphics2D g2d = image.createGraphics();
+                            g2d.setColor(Color.WHITE);
+                            g2d.fillRect(0, 0, image.getWidth(), image.getHeight());
+                            g2d.drawImage(iconImage, 0, 0, null);
+                            g2d.dispose();
+                        }
+                        ImageIO.write(image, "jpg", new MemoryCacheImageOutputStream(out));
+                        byte[] bytes = out.toByteArray();
+                        artwork = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(bytes);
+                    } catch (Exception e) {
+                        System.err.println("Static-quality JPEG generation failed, moving to PNG...");
+                    }
+                }
+                if (artwork.isEmpty()) {
+                    try {
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        ImageIO.write(iconImage, "png", new MemoryCacheImageOutputStream(out));
+                        byte[] bytes = out.toByteArray();
+                        artwork = "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
+                    } catch (Exception e) {
+                        System.err.println("PNG generation failed! Skipping icon generation...");
+                    }
+                }
             }
             App app = AppList.getAppByBundleID(bundleID);
             if (app == null) {
