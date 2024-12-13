@@ -143,7 +143,7 @@ public class Server {
                         .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">")
                         .append(cutStringTo(app.getName(), 15)).append("</center></div></div></a>");
             }
-            out.append("</fieldset><fieldset><a href=\"https://github.com/CatsLover2006/iOSobscuraServer\"><div><div>Check out the Github</div></div></a>");
+            out.append("</fieldset><fieldset><a href=\"https://github.com/CatsLover2006/iOSobscuraServer\"><div><div>Check out the Github</div></div></a><a href=\"/stats\"><div><div>Server Stats</div></div></a>");
             if (!donateURL.isEmpty())
                 out.append("<a href=\"").append(donateURL).append("\"><div><div>Donate to this instance</div></div></a>");
             out.append("</fieldset></panel></body></html>");
@@ -528,6 +528,56 @@ public class Server {
                 out.append("</fieldset>");
             }
             out.append("</panel></body></html>");
+            byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
+
+        server.createContext("/stats").setHandler(exchange -> {
+            StringBuilder out = new StringBuilder();
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            outgoingHeaders.set("Content-Type", "text/html; charset=utf-8");
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            String iOS_ver = "99999999";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                iOS_ver = split2[split2.length - 1].replace("_", ".");
+            }
+            out.append(Templates.generateBasicHeader("Server Stats", headerTag))
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Server Stats</strong></center></div></div><div><div><form action=\"searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"/\"><div><div>Return to Homepage</div></div></a></fieldset><label>Stats</label><fieldset>");
+            List<App> apps = AppList.searchApps("");
+            out.append("<div><div style=\"overflow:auto\">App Count<span style=\"float:right\">").append(apps.size())
+                    .append("</span></div></div><div><div style=\"overflow:auto\">Version Count<span style=\"float:right\">")
+                    .append(apps.parallelStream().mapToLong(app -> app.getSupportedAppVersions("99999999").length).sum())
+                    .append("</span></div></div><div><div style=\"overflow:auto\">URL Count<span style=\"float:right\">")
+                    .append(apps.parallelStream().mapToLong(app -> app.getAllUrls().size()).sum())
+                    .append("</span></div></div></fieldset><label>Your Device</label><fieldset><div><div style=\"overflow:auto\">iOS Device?<span style=\"float:right\">")
+                    .append(iOS_connection ? "Yes" : "No").append("</span></div></div>");
+            if (iOS_connection) out.append("<div><div style=\"overflow:auto\">iOS Version<span style=\"float:right\">")
+                    .append(iOS_ver).append("</span></div></div>");
+            else out.append("<div><div style=\"overflow:auto\">macOS Device?<span style=\"float:right\">")
+                    .append(userAgent.contains("Macintosh") ? "Yes" : "No").append("</span></div></div>");
+            try {
+                String final_iOS_ver = iOS_ver;
+                List<App> appsForDevice = AppList.listAppsThatSupportVersion(iOS_ver);
+                StringBuilder temp = new StringBuilder();
+                temp.append("<div><div style=\"overflow:auto\">Searchable App Count<span style=\"float:right\">").append(appsForDevice.size())
+                        .append("</span></div></div><div><div style=\"overflow:auto\">Searchable Version Count<span style=\"float:right\">")
+                        .append(apps.parallelStream().mapToLong(app -> app.getSupportedAppVersions(final_iOS_ver).length).sum())
+                        .append("</span></div></div><div><div style=\"overflow:auto\">Searchable URL Count<span style=\"float:right\">")
+                        .append(apps.parallelStream().mapToLong(app -> app.getAllUrlsForVersion(final_iOS_ver).size()).sum())
+                        .append("</span></div></div>");
+                out.append(temp);
+            } catch (Exception e) {
+                out.append("<div><div>Searchable Count Error</div></div>");
+                e.printStackTrace();
+            }
+            out.append("</fieldset></panel></body></html>");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);

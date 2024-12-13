@@ -303,4 +303,14 @@ public class App {
         }
         return list;
     }
+
+    public List<String> getAllUrlsForVersion(String version) {
+        LinkedList<String> list = new LinkedList<>();
+        for (Version v : versions) {
+            if (isVersionLater(v.supportedVersion, version)) {
+                list.addAll(Arrays.stream(v.links).map(link -> link.url).collect(Collectors.toList()));
+            }
+        }
+        return list;
+    }
 }
