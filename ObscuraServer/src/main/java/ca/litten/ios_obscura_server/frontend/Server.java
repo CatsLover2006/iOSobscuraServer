@@ -116,7 +116,14 @@ public class Server {
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
-                iOS_ver = split2[split2.length - 1].replace("_", ".");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                iOS_ver = "";
+                for (int index = 0; index < end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
             }
             if (!(exchange.getRequestURI().toString().equals("/") || exchange.getRequestURI().toString().isEmpty())) {
                 byte[] bytes = errorPages.general404.getBytes(StandardCharsets.UTF_8);
@@ -165,7 +172,13 @@ public class Server {
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
-                String ver = split2[split2.length - 1].replace("_", ".");
+                String ver = "";
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                for (int index = 0; index < end_index; index++)
+                    ver = ver + iOS_ver_split[index] + ".";
+                ver = ver.substring(0, ver.length() - 1);
                 if (App.isVersionLater("7.0", ver)) {
                     styleVariant = "c1ff8b8b33e0b3de6657c943de001d1aff84d634";
                     radius = iOS7mask;
@@ -174,7 +187,13 @@ public class Server {
             if (macOS_connection) {
                 String[] split1 = userAgent.split("AppleWebKit");
                 String[] split2 = split1[0].split("\\)")[0].split(" ");
-                String ver = split2[split2.length - 1].replace("_", ".");
+                String ver = "";
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                for (int index = 0; index < end_index; index++)
+                    ver = ver + iOS_ver_split[index] + ".";
+                ver = ver.substring(0, ver.length() - 1);
                 if (App.isVersionLater("10.10", ver)) {
                     styleVariant = "c1ff8b8b33e0b3de6657c943de001d1aff84d634";
                     radius = iOS7mask;
@@ -384,7 +403,14 @@ public class Server {
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
-                iOS_ver = split2[split2.length - 1].replace("_", ".");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                iOS_ver = "";
+                for (int index = 0; index < end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
             }
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
             App app = AppList.getAppByBundleID(splitURI[2]);
@@ -463,7 +489,14 @@ public class Server {
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
-                iOS_ver = split2[split2.length - 1].replace("_", ".");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                iOS_ver = "";
+                for (int index = 0; index < end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
             }
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
             App app = AppList.getAppByBundleID(splitURI[2]);
@@ -546,7 +579,14 @@ public class Server {
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
-                iOS_ver = split2[split2.length - 1].replace("_", ".");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                iOS_ver = "";
+                for (int index = 0; index < end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
             }
             out.append(Templates.generateBasicHeader("Server Stats", headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Server Stats</strong></center></div></div><div><div><form action=\"searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"/\"><div><div>Return to Homepage</div></div></a></fieldset><label>Stats</label><fieldset>");
@@ -595,7 +635,14 @@ public class Server {
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
-                iOS_ver = split2[split2.length - 1].replace("_", ".");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                iOS_ver = "";
+                for (int index = 0; index < end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
             }
             out.append(Templates.generateBasicHeader("HTML Sitemap", headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><strong>HTML Sitemap</strong></div></div>");
@@ -654,7 +701,14 @@ public class Server {
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
-                iOS_ver = split2[split2.length - 1].replace("_", ".");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                iOS_ver = "";
+                for (int index = 0; index < end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
             }
             outgoingHeaders.set("Content-Type", "text/html; charset=utf-8");
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
@@ -704,13 +758,25 @@ public class Server {
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
-                String ver = split2[split2.length - 1].replace("_", ".");
+                String ver = "";
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                for (int index = 0; index < end_index; index++)
+                    ver = ver + iOS_ver_split[index] + ".";
+                ver = ver.substring(0, ver.length() - 1);
                 modernOS = App.isVersionLater("7.0", ver);
             }
             if (macOS_connection) {
                 String[] split1 = userAgent.split("AppleWebKit");
                 String[] split2 = split1[0].split("\\)")[0].split(" ");
-                String ver = split2[split2.length - 1].replace("_", ".");
+                String ver = "";
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length;
+                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                for (int index = 0; index < end_index; index++)
+                    ver = ver + iOS_ver_split[index] + ".";
+                ver = ver.substring(0, ver.length() - 1);
                 modernOS = App.isVersionLater("10.10", ver);
             }
             outgoingHeaders.set("Content-Type", "image/jpeg");
