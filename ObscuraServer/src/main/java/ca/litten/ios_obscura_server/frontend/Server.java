@@ -117,10 +117,10 @@ public class Server {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
                 iOS_ver = "";
-                for (int index = 0; index < end_index; index++)
+                for (int index = 0; index <= end_index; index++)
                     iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
                 if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
                 else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
@@ -174,9 +174,10 @@ public class Server {
                 String[] split2 = split1[0].split(" ");
                 String ver = "";
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
-                for (int index = 0; index < end_index; index++)
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0"))
+                    end_index--;
+                for (int index = 0; index <= end_index; index++)
                     ver = ver + iOS_ver_split[index] + ".";
                 ver = ver.substring(0, ver.length() - 1);
                 if (App.isVersionLater("7.0", ver)) {
@@ -189,9 +190,9 @@ public class Server {
                 String[] split2 = split1[0].split("\\)")[0].split(" ");
                 String ver = "";
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
-                for (int index = 0; index < end_index; index++)
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
+                for (int index = 0; index <= end_index; index++)
                     ver = ver + iOS_ver_split[index] + ".";
                 ver = ver.substring(0, ver.length() - 1);
                 if (App.isVersionLater("10.10", ver)) {
@@ -404,10 +405,10 @@ public class Server {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
                 iOS_ver = "";
-                for (int index = 0; index < end_index; index++)
+                for (int index = 0; index <= end_index; index++)
                     iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
                 if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
                 else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
@@ -490,10 +491,10 @@ public class Server {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
                 iOS_ver = "";
-                for (int index = 0; index < end_index; index++)
+                for (int index = 0; index <= end_index; index++)
                     iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
                 if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
                 else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
@@ -580,10 +581,10 @@ public class Server {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
                 iOS_ver = "";
-                for (int index = 0; index < end_index; index++)
+                for (int index = 0; index <= end_index; index++)
                     iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
                 if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
                 else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
@@ -636,10 +637,10 @@ public class Server {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
                 iOS_ver = "";
-                for (int index = 0; index < end_index; index++)
+                for (int index = 0; index <= end_index; index++)
                     iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
                 if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
                 else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
@@ -702,10 +703,10 @@ public class Server {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
                 iOS_ver = "";
-                for (int index = 0; index < end_index; index++)
+                for (int index = 0; index <= end_index; index++)
                     iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
                 if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
                 else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
@@ -760,9 +761,9 @@ public class Server {
                 String[] split2 = split1[0].split(" ");
                 String ver = "";
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
-                for (int index = 0; index < end_index; index++)
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
+                for (int index = 0; index <= end_index; index++)
                     ver = ver + iOS_ver_split[index] + ".";
                 ver = ver.substring(0, ver.length() - 1);
                 modernOS = App.isVersionLater("7.0", ver);
@@ -772,9 +773,9 @@ public class Server {
                 String[] split2 = split1[0].split("\\)")[0].split(" ");
                 String ver = "";
                 String[] iOS_ver_split = split2[split2.length - 1].split("_");
-                int end_index = iOS_ver_split.length;
-                while (end_index > 0 && iOS_ver_split[end_index] == "0") end_index--;
-                for (int index = 0; index < end_index; index++)
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
+                for (int index = 0; index <= end_index; index++)
                     ver = ver + iOS_ver_split[index] + ".";
                 ver = ver.substring(0, ver.length() - 1);
                 modernOS = App.isVersionLater("10.10", ver);
