@@ -38,12 +38,16 @@ public class ArchiveListDecoder {
             Node node;
             for (int i = 0; i < nodes.getLength(); i++) {
                 node = nodes.item(i);
-                NodeList children = node.getChildNodes();
-                for (int j = 0; j < children.getLength(); j++) {
-                    if (children.item(j).getNodeName().equals("format") &&
-                            children.item(j).getChildNodes().item(0).getNodeValue()
-                                    .equals("iOS App Store Package")) {
-                        list.add(pathMinusFile + node.getAttributes().getNamedItem("name").getNodeValue());
+                if (node.getAttributes().getNamedItem("name").getNodeValue().toLowerCase().endsWith(".ipa")) {
+                    list.add(pathMinusFile + node.getAttributes().getNamedItem("name").getNodeValue());
+                } else {
+                    NodeList children = node.getChildNodes();
+                    for (int j = 0; j < children.getLength(); j++) {
+                        if (children.item(j).getNodeName().equals("format") &&
+                                children.item(j).getChildNodes().item(0).getNodeValue()
+                                        .equals("iOS App Store Package")) {
+                            list.add(pathMinusFile + node.getAttributes().getNamedItem("name").getNodeValue());
+                        }
                     }
                 }
             }

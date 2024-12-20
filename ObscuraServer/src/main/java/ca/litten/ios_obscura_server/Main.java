@@ -43,11 +43,13 @@ public class Main {
                 for (Object o : object.getJSONArray("network_files")) {
                     urlist.add(o.toString());
                 }
+                System.out.println("Total URLs found: " + urlist.size());
                 for (Object o : object.getJSONArray("archive_org_archives")) {
                     System.out.println("Adding files in archive.org item " + o.toString() + " to url list...");
                     urlist.addAll(Arrays.asList(ArchiveListDecoder
                             .getUrlListFromArchiveOrgListing(new URL("https://archive.org/download/"
                                     + o.toString() + "/" + o.toString() + "_files.xml"))));
+                    System.out.println("Total URLs found: " + urlist.size());
                 }
             } catch (Exception e) {
                 return;
