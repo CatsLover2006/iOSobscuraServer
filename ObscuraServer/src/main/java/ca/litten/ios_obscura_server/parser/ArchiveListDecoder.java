@@ -38,6 +38,7 @@ public class ArchiveListDecoder {
             Node node;
             for (int i = 0; i < nodes.getLength(); i++) {
                 node = nodes.item(i);
+                if (node.getAttributes() == null) continue; // Fix?
                 if (node.getAttributes().getNamedItem("name").getNodeValue().toLowerCase().endsWith(".ipa")) {
                     list.add(pathMinusFile + node.getAttributes().getNamedItem("name").getNodeValue());
                 } else {
