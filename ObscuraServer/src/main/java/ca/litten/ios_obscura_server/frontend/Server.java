@@ -39,6 +39,7 @@ public class Server {
     public static boolean allowReload = false;
     private static String serverName = "localhost";
     private static String donateURL = "";
+    private static String repeaterPrefix = "";
     private static String headerTag = "";
     private static int port;
     private static ErrorPageCreator errorPages;
@@ -94,6 +95,7 @@ public class Server {
             serverName = object.getString("host");
             donateURL = object.getString("donate_url");
             headerTag = object.getString("header_tags");
+            repeaterPrefix = object.getString("repeater_url_prefix");
             errorPages = new ErrorPageCreator(headerTag);
             port = object.getInt("port");
         } catch (Exception e) {
@@ -479,6 +481,43 @@ public class Server {
             exchange.getResponseBody().write(bytes);
             exchange.close();
         });
+        server.createContext("/generateProxiedInstallManifest/").setHandler(exchange -> {
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
+            App app = AppList.getAppByBundleID(splitURI[2]);
+            if (app == null) {
+                outgoingHeaders.set("Content-Type", "text/html");
+                exchange.sendResponseHeaders(404, errorPages.app404.length());
+                exchange.getResponseBody().write(errorPages.app404.getBytes(StandardCharsets.UTF_8));
+                exchange.close();
+                return;
+            }
+            outgoingHeaders.set("Content-Type", "text/xml");
+            App.VersionLink[] versions = app.getLinksForVersion(splitURI[3]);
+            NSDictionary root = new NSDictionary();
+            NSDictionary item = new NSDictionary();
+            NSDictionary[] asset = new NSDictionary[2];
+            NSDictionary metadata = new NSDictionary();
+            asset[0] = new NSDictionary();
+            asset[0].put("kind", "software-package");
+            asset[0].put("url", repeaterPrefix + versions[Integer.parseInt(splitURI[4])].getUrl());
+            asset[1] = new NSDictionary();
+            asset[1].put("kind", "display-image");
+            asset[1].put("needs-shine", false);
+            asset[1].put("url", repeaterPrefix + "https://" + serverName + "/getAppIcon/" + app.getBundleID());
+            metadata.put("bundle-identifier", app.getBundleID());
+            metadata.put("bundle-version", splitURI[3]);
+            metadata.put("kind", "software");
+            metadata.put("title", app.getName());
+            item.put("assets", new NSArray(asset));
+            item.put("metadata", metadata);
+            root.put("items", new NSArray(new NSDictionary[] {item}));
+            byte[] bytes = root.toXMLPropertyList().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
         server.createContext("/getAppVersionLinks/").setHandler(exchange -> {
             StringBuilder out = new StringBuilder();
             Headers incomingHeaders = exchange.getRequestHeaders();
@@ -547,8 +586,13 @@ public class Server {
                 if (iOS_connection || userAgent.contains("Macintosh"))
                     out.append("<a href=\"itms-services://?action=download-manifest&url=https://").append(serverName)
                             .append("/generateInstallManifest/").append(splitURI[2]).append("/").append(splitURI[3]).append("/").append(i)
-                            .append("\"><div><div>iOS Direct Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div></a>");
+                            .append("\"><div><div>iOS Direct Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div>");
                 if (iOS_connection) {
+                    if (App.isVersionLater(iOS_ver, "12.2"))
+                        out.append("</a><a href=\"itms-services://?action=download-manifest&url=").append(repeaterPrefix)
+                                .append("https://").append(serverName).append("/generateProxiedInstallManifest/")
+                                .append(splitURI[2]).append("/").append(splitURI[3]).append("/").append(i)
+                                .append("\"><div><div>iOS Proxied Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div></a>");
                     if ((App.isVersionLater("14.0", iOS_ver) && App.isVersionLater(iOS_ver, "16.6.1")) || (iOS_ver.startsWith("17.0") && iOS_ver.endsWith(".0")))
                         out.append("<a href=\"apple-magnifier://install?url=").append(versions[i].getUrl())
                                 .append("\"><div><div>Install with TrollStore</div></div></a>");
