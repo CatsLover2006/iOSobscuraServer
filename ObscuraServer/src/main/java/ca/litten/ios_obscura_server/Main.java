@@ -16,6 +16,9 @@ import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.LinkedList;
 import java.util.Objects;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.net.UrlEscapers.urlPathSegmentEscaper;
 
@@ -54,10 +57,9 @@ public class Main {
             } catch (Exception e) {
                 return;
             }
-            Thread task;
-            Thread[] tasks = new Thread[Runtime.getRuntime().availableProcessors() * 2];
-            task = new Thread(() -> {});
-            Arrays.fill(tasks, task);
+            ThreadPoolExecutor executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
+                    Runtime.getRuntime().availableProcessors() * 4,
+                    100, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
             System.out.println("Started parser!");
             for (String temp : urlist) {
                 String[] urlfrags = temp.split("/");
@@ -78,29 +80,20 @@ public class Main {
                 if (good)
                     continue;
                 String finalUrl = url;
-                task = new Thread(() -> {
+                executor.execute(() -> {
                     try {
                         AppDownloader.downloadAndAddApp(new URL(finalUrl));
                     } catch (Exception e) {
                         System.err.println(e);
                     }
                 });
-                while (!task.isAlive()) {
-                    for (int i = 0; i < tasks.length; i++) {
-                        if (!tasks[i].isAlive()) {
-                            tasks[i] = task;
-                            task.start();
-                            break;
-                        }
-                    }
-                }
             }
-            for (Thread thread : tasks) {
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    // LOL
-                }
+            System.out.println("Finished sending out parser threads, waiting for them to finish...");
+            executor.shutdown();
+            try {
+                executor.awaitTermination(1, TimeUnit.DAYS);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }
@@ -112,6 +105,7 @@ public class Main {
         if (Arrays.asList(args).contains("--help")) {
             System.out.println("--skipNoAppIcon: skips apps with no app icon when loading the database");
             System.out.println("--skipDataIcon: skips apps with a data URI icon when loading the database");
+            System.out.println("--checkAppUrls: check app URLs during database loading, skip loading if an error code is returned");
             System.out.println("--noParse: disable app parsing to save RAM");
             System.out.println("--help: display this message");
             return;
@@ -135,7 +129,8 @@ public class Main {
             throw new RuntimeException(e);
         }
         System.out.println("Loading database...");
-        AppList.loadAppDatabaseFile(databaseLocation, Arrays.asList(args).contains("--skipNoAppIcon"), Arrays.asList(args).contains("--skipDataIcon"));
+        AppList.loadAppDatabaseFile(databaseLocation, Arrays.asList(args).contains("--skipNoAppIcon"),
+                Arrays.asList(args).contains("--skipDataIcon"), Arrays.asList(args).contains("--checkAppUrls"));
         if (AppList.getAppByBundleID("nil") == null) {
             System.out.println("New database? Adding broken apps entry...");
             App app = new App("Broken Apps", "nil");
