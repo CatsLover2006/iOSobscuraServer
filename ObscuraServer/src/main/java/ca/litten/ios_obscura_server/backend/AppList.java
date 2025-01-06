@@ -151,7 +151,7 @@ public class AppList {
             System.out.println("Finished sending out parser threads, waiting for them to finish...");
             executor.shutdown();
             while (executor.isTerminating()) {
-                for (int i = 0; i < 10 && executor.isTerminating(); i++) Thread.sleep(1000);
+                executor.awaitTermination(10, TimeUnit.SECONDS);
                 if (executor.isTerminating()) System.out.println("Seen " + links + " links");
             }
             System.out.println("Saw " + appCount + " apps, loaded " + appsLoaded);

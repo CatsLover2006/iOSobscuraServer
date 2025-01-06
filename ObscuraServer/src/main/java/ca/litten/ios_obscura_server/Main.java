@@ -90,10 +90,13 @@ public class Main {
             }
             System.out.println("Finished sending out parser threads, waiting for them to finish...");
             executor.shutdown();
-            try {
-                executor.awaitTermination(1, TimeUnit.DAYS);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            while (executor.isTerminating()) {
+                try {
+                    executor.awaitTermination(1, TimeUnit.DAYS);
+                } catch (InterruptedException e) {
+                    System.err.println("How the fuck did you interrupt this thread?");
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
