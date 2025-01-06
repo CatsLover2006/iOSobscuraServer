@@ -586,10 +586,10 @@ public class Server {
                 if (iOS_connection || userAgent.contains("Macintosh"))
                     out.append("<a href=\"itms-services://?action=download-manifest&url=https://").append(serverName)
                             .append("/generateInstallManifest/").append(splitURI[2]).append("/").append(splitURI[3]).append("/").append(i)
-                            .append("\"><div><div>iOS Direct Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div>");
+                            .append("\"><div><div>iOS Direct Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div></a>");
                 if (iOS_connection) {
                     if (App.isVersionLater(iOS_ver, "12.2"))
-                        out.append("</a><a href=\"itms-services://?action=download-manifest&url=").append(repeaterPrefix)
+                        out.append("<a href=\"itms-services://?action=download-manifest&url=").append(repeaterPrefix)
                                 .append("https://").append(serverName).append("/generateProxiedInstallManifest/")
                                 .append(splitURI[2]).append("/").append(splitURI[3]).append("/").append(i)
                                 .append("\"><div><div>iOS Proxied Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div></a>");
