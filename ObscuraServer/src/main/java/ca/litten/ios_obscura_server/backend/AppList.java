@@ -242,7 +242,7 @@ public class AppList {
             if (appName.startsWith(query)) resultPossibility += query.length() * 30;
             if (((appName.contains(":")||appName.contains("–"))?
                     appName.substring(0, Math.max(appName.lastIndexOf(":"), appName.lastIndexOf("–"))):appName)
-                    .trim().equals(query))
+                    .trim().equals(query) || query.equals(appName))
                 resultPossibility += query.length() * 123;
             for (int i = 0; i < query.length(); i++) {
                 val = bundleName.indexOf(query.charAt(i), val);
