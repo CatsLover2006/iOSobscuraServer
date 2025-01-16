@@ -428,6 +428,7 @@ public class AppDownloader {
                     }
                 }
             }
+            bundleID = bundleID.toLowerCase(); // Case desensitize
             App app = AppList.getAppByBundleID(bundleID);
             if (app == null) {
                 app = new App(appName, bundleID);
