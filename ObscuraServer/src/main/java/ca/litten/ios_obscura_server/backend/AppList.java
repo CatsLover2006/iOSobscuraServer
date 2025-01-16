@@ -253,7 +253,7 @@ public class AppList {
             if (bundleName.contains(query)) resultPossibility += query.length() * 70;
             if (bundleName.endsWith(query)) resultPossibility += query.length() * 90;
             if (bundleName.equals(query)) resultPossibility += BundleMatchBonus * query.length();
-            if (app.getBundleID().contains("com.google")) System.out.println(app.getBundleID() + ": " + resultPossibility);
+            //if (app.getBundleID().contains("com.google")) System.out.println(app.getBundleID() + ": " + resultPossibility);
         }
     }
     
