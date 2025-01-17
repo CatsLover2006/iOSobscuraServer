@@ -204,7 +204,7 @@ public class AppList {
     
     private static final double BundleMatchBonus = Math.sqrt(Math.sqrt(Math.pow(Math.PI, Math.pow(Math.PI, Math.PI))));
     
-    protected static class SearchResult {
+    public static class SearchResult {
         public double resultPossibility;
         public App app;
         
@@ -266,12 +266,28 @@ public class AppList {
                 .sorted(Comparator.comparingDouble(app -> -app.resultPossibility))
                 .map(app -> app.app).collect(Collectors.toList());
     }
+    public static List<SearchResult> searchAppsWithWeights(String query, String version) {
+        return apps.parallelStream().filter(app -> app.showAppForVersion(version))
+                .map(app -> new SearchResult(app, query))
+                .filter(app -> app.resultPossibility >= query.length() * AppRelevanceCutoff)
+                .sorted(Comparator.comparingDouble(app -> -app.resultPossibility)).collect(Collectors.toList());
+    }
     
     public static List<App> searchApps(String query) {
         return apps.parallelStream().map(app -> new SearchResult(app, query))
                 .filter(app -> app.resultPossibility >= query.length() * AppRelevanceCutoff)
                 .sorted(Comparator.comparingDouble(app -> -app.resultPossibility))
                 .map(app -> app.app).collect(Collectors.toList());
+    }
+    
+    public static double getSearchRelevanceCutoff(String query) {
+        return query.length() * AppRelevanceCutoff;
+    }
+    
+    public static List<SearchResult> searchAppsWithWeights(String query) {
+        return apps.parallelStream().map(app -> new SearchResult(app, query))
+                .filter(app -> app.resultPossibility >= query.length() * AppRelevanceCutoff)
+                .sorted(Comparator.comparingDouble(app -> -app.resultPossibility)).collect(Collectors.toList());
     }
     
     public static boolean appUrlAlreadyExists(String url) {

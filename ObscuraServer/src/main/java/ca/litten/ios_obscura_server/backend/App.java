@@ -296,6 +296,23 @@ public class App {
         return new VersionLink[]{};
     }
     
+    public JSONObject getJSONForVersion(String version) {
+        for (Version v : versions) {
+            if (v.version.equals(version)) {
+                JSONObject versionJSON = new JSONObject();
+                versionJSON.put("ver", v.version);
+                versionJSON.put("support", v.supportedVersion);
+                JSONArray urls = new JSONArray();
+                for (VersionLink url : v.links) {
+                    urls.put(url.toJSON());
+                }
+                versionJSON.put("urls", urls);
+                return versionJSON;
+            }
+        }
+        return new JSONObject();
+    }
+    
     public List<String> getAllUrls() {
         LinkedList<String> list = new LinkedList<>();
         for (Version v : versions) {

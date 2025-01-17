@@ -127,16 +127,23 @@ public class Server {
                 if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
                 else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
             }
-            if (!(exchange.getRequestURI().toString().equals("/") || exchange.getRequestURI().toString().isEmpty())) {
+            String exchangeURI = exchange.getRequestURI().toString();
+            if (!(exchangeURI.equals("/") || exchangeURI.isEmpty() || exchangeURI.toLowerCase().equals("/debug")
+                    || exchangeURI.toLowerCase().equals("/debug/"))) {
                 byte[] bytes = errorPages.general404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
                 exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
+            boolean debugMode = exchangeURI.toLowerCase().contains("debug");
             StringBuilder out = new StringBuilder();
             out.append(Templates.generateBasicHeader("iOS Obscura Locator", headerTag))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>iPhoneOS Obscura Locator Homepage</strong></center></div></div><div><div><form action=\"searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div></fieldset><label>Some Apps</label><fieldset>");
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>iPhoneOS Obscura Locator Homepage</strong></center></div></div>");
+            if (debugMode) out.append("<div><div>Debug Mode</div></div>");
+            out.append("<div><div><form action=\"");
+            if (debugMode) out.append("/debug");
+            out.append("/searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div></fieldset><label>Some Apps</label><fieldset>");
             List<App> apps = AppList.listAppsThatSupportVersion(iOS_ver);
             App app;
             int random;
@@ -146,11 +153,18 @@ public class Server {
             } else for (int i = 0; i < Math.min(20, s); i++) {
                 random = rand.nextInt(apps.size());
                 app = apps.remove(random);
-                out.append("<a style=\"height:77px\" href=\"getAppVersions/").append(app.getBundleID())
-                        .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
-                        .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
-                        .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">")
-                        .append(cutStringTo(app.getName(), 15)).append("</center></div></div></a>");
+                if (debugMode)
+                    out.append("<a style=\"height:77px\" href=\"/debug/getAppVersions/").append(app.getBundleID())
+                            .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                            .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                            .append(app.getBundleID()).append("'\"><center style=\"line-height: 11px\"><br>").append(cutStringTo(app.getName(), 15))
+                            .append("<br><small style=\"font-size:x-small\">").append(app.getBundleID()).append("<br>URL Count: ").append(app.getAllUrls().size()).append("</small></center></div></div></a>");
+                else
+                    out.append("<a style=\"height:77px\" href=\"getAppVersions/").append(app.getBundleID())
+                            .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
+                            .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                            .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">")
+                            .append(cutStringTo(app.getName(), 15)).append("</center></div></div></a>");
             }
             out.append("</fieldset><fieldset><a href=\"https://github.com/CatsLover2006/iOSobscuraServer\"><div><div>Check out the Github</div></div></a><a href=\"/stats\"><div><div>Server Stats</div></div></a>");
             if (!donateURL.isEmpty())
@@ -395,6 +409,56 @@ public class Server {
             exchange.getResponseBody().write(bytes);
             exchange.close();
         });
+        server.createContext("/debug/getAppVersions/").setHandler(exchange -> {
+            StringBuilder out = new StringBuilder();
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            outgoingHeaders.set("Content-Type", "text/html; charset=utf-8");
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            String iOS_ver = "99999999";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
+                iOS_ver = "";
+                for (int index = 0; index <= end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
+            }
+            String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
+            App app = AppList.getAppByBundleID(splitURI[3]);
+            if (app == null) {
+                byte[] bytes = errorPages.app404.getBytes(StandardCharsets.UTF_8);
+                exchange.sendResponseHeaders(404, bytes.length);
+                exchange.getResponseBody().write(bytes);
+                exchange.close();
+                return;
+            }
+            out.append(Templates.generateBasicHeader(app.getName(), headerTag))
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                    .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                    .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
+                    .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
+                    .append("</div></div><div><div>Debug Mode</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset><label>Versions</label><fieldset>");
+            String[] versions = app.getSupportedAppVersions(iOS_ver);
+            if (versions.length == 0) {
+                out.append("<div><div>No Known Versions</div></div>");
+            } else for (String version : versions) {
+                out.append("<a href=\"/debug/getAppVersionLinks/").append(app.getBundleID()).append("/").append(version)
+                        .append("\"><div><div>").append(version).append(" <small style=\"font-size:x-small\">URLs: ")
+                        .append(app.getLinksForVersion(version).length).append("</small></div></div></a>");
+            }
+            out.append("</fieldset></panel></body></html>");
+            byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
         server.createContext("/getAppVersions/").setHandler(exchange -> {
             StringBuilder out = new StringBuilder();
             Headers incomingHeaders = exchange.getRequestHeaders();
@@ -612,7 +676,102 @@ public class Server {
             exchange.getResponseBody().write(bytes);
             exchange.close();
         });
-
+        
+        server.createContext("/debug/getAppVersionLinks/").setHandler(exchange -> {
+            StringBuilder out = new StringBuilder();
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            outgoingHeaders.set("Content-Type", "text/html; charset=utf-8");
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            String iOS_ver = "99999999";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
+                iOS_ver = "";
+                for (int index = 0; index <= end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
+            }
+            String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
+            App app = AppList.getAppByBundleID(splitURI[3]);
+            if (app == null) {
+                byte[] bytes = errorPages.app404.getBytes(StandardCharsets.UTF_8);
+                exchange.sendResponseHeaders(404, bytes.length);
+                exchange.getResponseBody().write(bytes);
+                exchange.close();
+                return;
+            }
+            out.append(Templates.generateBasicHeader(app.getName() + " " + splitURI[4], headerTag))
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                    .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                    .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
+                    .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
+                    .append("</div></div><div><div style=\"overflow:auto\">Version ").append(splitURI[4])
+                    .append("<span style=\"float:right\">Requires iOS ").append(app.getCompatibleVersion(splitURI[4]))
+                    .append("</span></div></div><div><div>Debug Mode</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+            App.VersionLink[] versions = app.getLinksForVersion(splitURI[4]);
+            for (int i = 0; i < versions.length; i++) {
+                out.append("<label>#").append(i + 1).append(", ").append(versions[i].getUrl().split("//")[1].split("/")[0]);
+                if (versions[i].getUrl().split("//")[1].split("/")[0].contains("archive.org"))
+                    out.append(", ").append(versions[i].getUrl().split("//")[1].split("/")[2]);
+                if (versions[i].getUrl().startsWith("https"))
+                    out.append(", SSL");
+                if (versions[i].getBinary() != null) {
+                    HashMap<CPUarch, Boolean> supportMatrix = versions[i].getBinary().getEncryptionMatrix();
+                    if (!supportMatrix.keySet().isEmpty()) {
+                        out.append("<br>Supports: ");
+                        for (CPUarch arch : supportMatrix.keySet()) {
+                            out.append(arch.name());
+                            if (supportMatrix.get(arch)) {
+                                out.append(" (Encrypted)");
+                            }
+                            out.append(", ");
+                        }
+                        out.deleteCharAt(out.length() - 2);
+                    } else {
+                        out.append("<br>Mach-O Error");
+                    }
+                } else {
+                    out.append("<br>Mach-O Error");
+                }
+                out.append("</label><fieldset><a href=\"").append(versions[i].getUrl())
+                        .append("\"><div><div>Direct Download <small style=\"font-size:x-small\">").append(versions[i].getSize())
+                        .append("</small></div></div></a>");
+                if (iOS_connection || userAgent.contains("Macintosh"))
+                    out.append("<a href=\"itms-services://?action=download-manifest&url=https://").append(serverName)
+                            .append("/generateInstallManifest/").append(splitURI[3]).append("/").append(splitURI[4]).append("/").append(i)
+                            .append("\"><div><div>iOS Direct Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div></a>");
+                if (iOS_connection) {
+                    if (App.isVersionLater(iOS_ver, "12.2"))
+                        out.append("<a href=\"itms-services://?action=download-manifest&url=").append(repeaterPrefix)
+                                .append("https://").append(serverName).append("/generateProxiedInstallManifest/")
+                                .append(splitURI[3]).append("/").append(splitURI[4]).append("/").append(i)
+                                .append("\"><div><div>iOS Proxied Install <small style=\"font-size:x-small\">Requires AppSync</small></div></div></a>");
+                    if ((App.isVersionLater("14.0", iOS_ver) && App.isVersionLater(iOS_ver, "16.6.1")) || (iOS_ver.startsWith("17.0") && iOS_ver.endsWith(".0")))
+                        out.append("<a href=\"apple-magnifier://install?url=").append(versions[i].getUrl())
+                                .append("\"><div><div>Install with TrollStore</div></div></a>");
+                    if (App.isVersionLater("12.2", iOS_ver))
+                        out.append("<a href=\"altstore://install?url=").append(versions[i].getUrl())
+                                .append("\"><div><div>Install with AltStore Classic</div></div></a>");
+                    if (App.isVersionLater("14.0", iOS_ver))
+                        out.append("<a href=\"sidestore://install?url=").append(versions[i].getUrl())
+                                .append("\"><div><div>Install with SideStore</div></div></a>");
+                }
+                out.append("</fieldset>");
+            }
+            out.append("<label>App Version JSON</label><fieldset><div><div style=\"font-size:xx-small\">")
+                    .append(app.getJSONForVersion(splitURI[4])).append("</fieldset></panel></body></html>");
+            byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
+            exchange.close();
+        });
         server.createContext("/stats").setHandler(exchange -> {
             StringBuilder out = new StringBuilder();
             Headers incomingHeaders = exchange.getRequestHeaders();
@@ -727,12 +886,78 @@ public class Server {
             exchange.getResponseBody().write(bytes);
             exchange.close();
         });
+        server.createContext("/debug/searchPost").setHandler(exchange -> {
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("\\?");
+            outgoingHeaders.set("Location", "/debug/search/" + splitURI[1].substring(7));
+            outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
+            exchange.sendResponseHeaders(308, 0);
+            exchange.close();
+        });
         server.createContext("/searchPost").setHandler(exchange -> {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("\\?");
             outgoingHeaders.set("Location", "/search/" + splitURI[1].substring(7));
             outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(308, 0);
+            exchange.close();
+        });
+        server.createContext("/debug/search").setHandler(exchange -> {
+            StringBuilder out = new StringBuilder();
+            Headers incomingHeaders = exchange.getRequestHeaders();
+            Headers outgoingHeaders = exchange.getResponseHeaders();
+            outgoingHeaders.set("Content-Type", "text/html; charset=utf-8");
+            String userAgent = incomingHeaders.get("user-agent").get(0);
+            boolean iOS_connection = userAgent.contains("iPhone OS") || userAgent.contains("iPad");
+            String iOS_ver = "99999999";
+            if (iOS_connection) {
+                String[] split1 = userAgent.split("like Mac OS X");
+                String[] split2 = split1[0].split(" ");
+                String[] iOS_ver_split = split2[split2.length - 1].split("_");
+                int end_index = iOS_ver_split.length - 1;
+                while (end_index > 0 && iOS_ver_split[end_index].equals("0")) end_index--;
+                iOS_ver = "";
+                for (int index = 0; index <= end_index; index++)
+                    iOS_ver = iOS_ver + iOS_ver_split[index] + ".";
+                if (iOS_ver.indexOf('.') == iOS_ver.lastIndexOf('.')) iOS_ver = iOS_ver + "0";
+                else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
+            }
+            outgoingHeaders.set("Content-Type", "text/html; charset=utf-8");
+            String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("/");
+            String query;
+            try {
+                query = splitURI[3];
+            } catch (IndexOutOfBoundsException e) {
+                query = "";
+            }
+            out.append(Templates.generateBasicHeader("Search: " + query, headerTag))
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div><div><div>Debug Mode<small style=\"font-size:x-small\"><br>Relevance Cutoff: ")
+                    .append(AppList.getSearchRelevanceCutoff(query)).append("</small></div></div><div><div><form action=\"/debug/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
+                    .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+            if (!query.isEmpty()) {
+                out.append("<label>Search Results</label><fieldset>");
+                List<AppList.SearchResult> apps = AppList.searchAppsWithWeights(query, iOS_ver);
+                if (apps.isEmpty()) {
+                    out.append("<div><div>Couldn't find anything!</div></div><div><div>Make sure you've typed everything correctly, or try shortening your query.</div></div>");
+                } else {
+                    AppList.SearchResult app;
+                    int s = apps.size();
+                    for (int i = 0; i < Math.min(20, s); i++) {
+                        app = apps.remove(0);
+                        out.append("<a style=\"height:77px\" href=\"/debug/getAppVersions/").append(app.app.getBundleID())
+                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                                .append(app.app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                                .append(app.app.getBundleID()).append("'\"><center style=\"line-height: 11px\"><br>").append(cutStringTo(app.app.getName(), 15))
+                                .append("<br><small style=\"font-size:x-small\">").append(app.app.getBundleID()).append("<br>").append(app.resultPossibility).append("</small></center></div></div></a>");
+                    }
+                }
+                out.append("</fieldset>");
+            }
+            out.append("<fieldset><a href=\"/debug\"><div><div>Return to Homepage</div></div></a></fieldset></panel></body></html>");
+            byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
+            outgoingHeaders.set("Cache-Control", "no-cache");
+            exchange.sendResponseHeaders(200, bytes.length);
+            exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/search").setHandler(exchange -> {
@@ -764,8 +989,7 @@ public class Server {
                 query = "";
             }
             out.append(Templates.generateBasicHeader("Search: " + query, headerTag))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div>")
-                    .append("<div><div><form action=\"/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div><div><div><form action=\"/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
                     .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
             if (!query.isEmpty()) {
                 out.append("<label>Search Results</label><fieldset>");
