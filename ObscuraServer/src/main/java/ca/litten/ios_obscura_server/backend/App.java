@@ -14,12 +14,14 @@ public class App {
         private final String url;
         private final long size;
         private final String buildVersion;
+        private final String trueBundleID;
         
-        public VersionLink(Binary binary, String url, String buildVersion, long size) {
+        public VersionLink(Binary binary, String url, String buildVersion, long size, String trueBundleID) {
             this.binary = binary;
             this.url = url;
             this.size = size;
             this.buildVersion = buildVersion;
+            this.trueBundleID = trueBundleID;
         }
         
         public JSONObject toJSON() {
@@ -30,6 +32,7 @@ public class App {
             }
             object.put("fs", size);
             object.put("bv", buildVersion);
+            object.put("bID", trueBundleID);
             return object;
         }
         
@@ -39,6 +42,10 @@ public class App {
         
         public Binary getBinary() {
             return binary;
+        }
+        
+        public String getTrueBundleID() {
+            return trueBundleID;
         }
         
         public String getSize() {

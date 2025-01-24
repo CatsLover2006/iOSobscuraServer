@@ -135,7 +135,7 @@ public class AppList {
                                     binary = object.getJSONObject("bin");
                                 }
                                 linksLoaded.getAndIncrement();
-                                versionLinks.add(new App.VersionLink(Binary.fromJSON(binary), object.getString("url"), object.getString("bv"), object.getLong("fs")));
+                                versionLinks.add(new App.VersionLink(Binary.fromJSON(binary), object.getString("url"), object.getString("bv"), object.getLong("fs"), object.getString("bID")));
                             }
                             if (versionLinks.isEmpty()) continue;
                             versionsLoaded.getAndIncrement();

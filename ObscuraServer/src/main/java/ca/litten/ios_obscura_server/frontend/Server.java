@@ -532,7 +532,7 @@ public class Server {
             asset[1].put("kind", "display-image");
             asset[1].put("needs-shine", false);
             asset[1].put("url", "https://" + serverName + "/getAppIcon/" + app.getBundleID());
-            metadata.put("bundle-identifier", app.getBundleID());
+            metadata.put("bundle-identifier", versions[Integer.parseInt(splitURI[4])].getTrueBundleID());
             metadata.put("bundle-version", splitURI[3]);
             metadata.put("kind", "software");
             metadata.put("title", app.getName());
@@ -569,7 +569,7 @@ public class Server {
             asset[1].put("kind", "display-image");
             asset[1].put("needs-shine", false);
             asset[1].put("url", repeaterPrefix + "https://" + serverName + "/getAppIcon/" + app.getBundleID());
-            metadata.put("bundle-identifier", app.getBundleID());
+            metadata.put("bundle-identifier", versions[Integer.parseInt(splitURI[4])].getTrueBundleID());
             metadata.put("bundle-version", splitURI[3]);
             metadata.put("kind", "software");
             metadata.put("title", app.getName());

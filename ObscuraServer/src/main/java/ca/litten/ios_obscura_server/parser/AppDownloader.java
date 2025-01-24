@@ -428,10 +428,10 @@ public class AppDownloader {
                     }
                 }
             }
-            bundleID = bundleID.toLowerCase(); // Case desensitize
-            App app = AppList.getAppByBundleID(bundleID);
+            String bundleID_lowercase = bundleID.toLowerCase();
+            App app = AppList.getAppByBundleID(bundleID_lowercase);
             if (app == null) {
-                app = new App(appName, bundleID);
+                app = new App(appName, bundleID_lowercase);
                 AppList.addApp(app);
             }
             if (usesMetaName) {
@@ -439,7 +439,7 @@ public class AppDownloader {
             }
             app.updateArtwork(version, artwork);
             app.updateDeveloper(version, developer);
-            app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString(), buildVersion, size)}, minimumVersion);
+            app.addAppVersion(version, new App.VersionLink[]{new App.VersionLink(binary, url.toString(), buildVersion, size, bundleID)}, minimumVersion);
             System.out.println("Parsed: " + url);
         } catch (Throwable e) {
             e.printStackTrace();
