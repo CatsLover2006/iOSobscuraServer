@@ -143,7 +143,10 @@ public class AppList {
                                     versionLinks.toArray(new App.VersionLink[]{}),
                                     versionJSON.getString("support"));
                         }
-                        if (app.getAllUrls().isEmpty()) return;
+                        if (app.getAllUrls().isEmpty()) {
+                            apps.remove(app);
+                            return;
+                        }
                         app.updateArtwork(appJSON.getString("artver"), appJSON.getString("art"));
                         app.updateDeveloper(appJSON.getString("devVer"), appJSON.getString("dev"));
                         if (appJSON.getBoolean("nN")) {
