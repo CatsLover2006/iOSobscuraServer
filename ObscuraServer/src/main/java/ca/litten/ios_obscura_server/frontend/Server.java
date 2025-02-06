@@ -215,7 +215,7 @@ public class Server {
             }
             out.append("@import url(\"https://cydia.saurik.com/cytyle/style-")
                     .append(styleVariant).append(".css\");@import url(\"http://cydia.saurik.com/cytyle/style-")
-                    .append(styleVariant).append(".css\");img{").append(radius).append("}");
+                    .append(styleVariant).append(".css\");img{").append(radius).append("}body{max-width:320px}");
             outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             outgoingHeaders.set("Content-Type", "text/css; charset=utf-8");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
