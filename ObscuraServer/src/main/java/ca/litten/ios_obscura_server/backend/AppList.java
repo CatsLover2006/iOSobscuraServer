@@ -8,11 +8,11 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class AppList {
     private static final ArrayList<App> apps = new ArrayList<>();
@@ -46,128 +46,99 @@ public class AppList {
                     out.append(buf[i]);
             }
             JSONArray appArray = new JSONArray(out.toString());
-            apps.clear();
-            AtomicInteger appCount = new AtomicInteger();
-            AtomicInteger versions = new AtomicInteger();
-            AtomicInteger links = new AtomicInteger();
-            AtomicInteger appsLoaded = new AtomicInteger();
-            AtomicInteger versionsLoaded = new AtomicInteger();
-            AtomicInteger linksLoaded = new AtomicInteger();
-            ThreadPoolExecutor executor;
-            if (!singleThreadedLoad) executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors(),
-                    Runtime.getRuntime().availableProcessors() * 4,
-                    100, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
-            else executor = new ThreadPoolExecutor(1,
-                    1, 100, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
-            for (Object appObject : appArray) {
-                executor.execute(() -> {
-                    try {
-                        appCount.getAndIncrement();
-                        JSONObject appJSON = (JSONObject) appObject;
-                        if (skipNameless && appJSON.getString("name").isEmpty()) return;
-                        if (skipEmptyIcons && appJSON.getString("art").isEmpty()) return;
-                        if (skipDataIcons && appJSON.getString("art").startsWith("data")) return;
-                        String bundleID = appJSON.getString("bundle").toLowerCase();
-                        App app = new App(appJSON.getString("name"), bundleID);
-                        if (singleThreadedLoad && getAppByBundleID(bundleID) != null) app = getAppByBundleID(bundleID);
-                        else apps.add(app);
-                        for (Object versionObject : appJSON.getJSONArray("versions")) {
-                            JSONObject versionJSON = (JSONObject) versionObject;
-                            versions.getAndIncrement();
-                            JSONArray array = versionJSON.getJSONArray("urls");
-                            LinkedList<App.VersionLink> versionLinks = new LinkedList<>();
-                            for (Object objectStd : array) {
-                                links.getAndIncrement();
-                                JSONObject object = (JSONObject) objectStd;
-                                if (checkUrls) {
-                                    try {
-                                        boolean skip = false;
-                                        {
-                                            URL tURL = new URL(object.getString("url"));
-                                            ;
-                                            HttpURLConnection connection;
-                                            boolean keepGoing = true;
-                                            int redirects = 0;
-                                            int rCode = 0;
-                                            while (keepGoing) {
-                                                connection = (HttpURLConnection) tURL.openConnection();
-                                                connection.setInstanceFollowRedirects(false);
-                                                connection.setRequestMethod("HEAD");
-                                                connection.connect();
-                                                switch (connection.getResponseCode() / 100) {
-                                                    case 2: { // Success
-                                                        if (connection.getResponseCode() == 204) {
-                                                            skip = true;
-                                                        }
-                                                        keepGoing = false;
-                                                        break;
-                                                    }
-                                                    case 3: { // Redirect
-                                                        String location = connection.getHeaderField("Location");
-                                                        tURL = new URL(tURL, location);
-                                                        redirects++;
-                                                        if (redirects > 10) {
-                                                            skip = true;
-                                                            keepGoing = false;
-                                                        }
-                                                        break;
-                                                    }
-                                                    case 4:    // Client error (mostly for 404s)
-                                                    case 5:    // Server error
-                                                    default: { // Catchall for other errors
-                                                        skip = true;
-                                                        keepGoing = false;
-                                                        break;
-                                                    }
+            Stream<Object> appStream = StreamSupport.stream(appArray.spliterator(), !singleThreadedLoad);
+            List<App> appList = appStream.map(o -> {
+                JSONObject appJSON = (JSONObject) o;
+                if (skipNameless && appJSON.getString("name").isEmpty()) return null;
+                if (skipEmptyIcons && appJSON.getString("art").isEmpty()) return null;
+                if (skipDataIcons && appJSON.getString("art").startsWith("data")) return null;
+                String bundleID = appJSON.getString("bundle").toLowerCase();
+                App app = new App(appJSON.getString("name"), bundleID);
+                for (Object versionObject : appJSON.getJSONArray("versions")) {
+                    JSONObject versionJSON = (JSONObject) versionObject;
+                    JSONArray array = versionJSON.getJSONArray("urls");
+                    LinkedList<App.VersionLink> versionLinks = new LinkedList<>();
+                    for (Object objectStd : array) {
+                        JSONObject object = (JSONObject) objectStd;
+                        if (checkUrls) {
+                            try {
+                                boolean skip = false;
+                                {
+                                    URL tURL = new URL(object.getString("url"));
+                                    ;
+                                    HttpURLConnection connection;
+                                    boolean keepGoing = true;
+                                    int redirects = 0;
+                                    int rCode = 0;
+                                    while (keepGoing) {
+                                        connection = (HttpURLConnection) tURL.openConnection();
+                                        connection.setInstanceFollowRedirects(false);
+                                        connection.setRequestMethod("HEAD");
+                                        connection.connect();
+                                        switch (connection.getResponseCode() / 100) {
+                                            case 2: { // Success
+                                                if (connection.getResponseCode() == 204) {
+                                                    skip = true;
                                                 }
-                                                rCode = connection.getResponseCode();
-                                                connection.disconnect();
+                                                keepGoing = false;
+                                                break;
                                             }
-                                        } // Check URL
-                                        if (skip) continue;
-                                    } catch (Exception e) {
-                                        System.out.println("Error while connecting, assuming bad URL...");
-                                        continue;
+                                            case 3: { // Redirect
+                                                String location = connection.getHeaderField("Location");
+                                                tURL = new URL(tURL, location);
+                                                redirects++;
+                                                if (redirects > 10) {
+                                                    skip = true;
+                                                    keepGoing = false;
+                                                }
+                                                break;
+                                            }
+                                            case 4:    // Client error (mostly for 404s)
+                                            case 5:    // Server error
+                                            default: { // Catchall for other errors
+                                                skip = true;
+                                                keepGoing = false;
+                                                break;
+                                            }
+                                        }
+                                        rCode = connection.getResponseCode();
+                                        connection.disconnect();
                                     }
-                                }
-                                JSONObject binary = null;
-                                if (object.has("bin")) {
-                                    binary = object.getJSONObject("bin");
-                                }
-                                linksLoaded.getAndIncrement();
-                                versionLinks.add(new App.VersionLink(Binary.fromJSON(binary), object.getString("url"), object.getString("bv"), object.getLong("fs"), object.getString("bID")));
+                                } // Check URL
+                                if (skip) continue;
+                            } catch (Exception e) {
+                                System.out.println("Error while connecting, assuming bad URL...");
+                                continue;
                             }
-                            if (versionLinks.isEmpty()) continue;
-                            versionsLoaded.getAndIncrement();
-                            app.addAppVersionNoSort(versionJSON.getString("ver"),
-                                    versionLinks.toArray(new App.VersionLink[]{}),
-                                    versionJSON.getString("support"));
                         }
-                        if (app.getAllUrls().isEmpty()) {
-                            apps.remove(app);
-                            return;
+                        JSONObject binary = null;
+                        if (object.has("bin")) {
+                            binary = object.getJSONObject("bin");
                         }
-                        app.updateArtwork(appJSON.getString("artver"), appJSON.getString("art"));
-                        app.updateDeveloper(appJSON.getString("devVer"), appJSON.getString("dev"));
-                        if (appJSON.getBoolean("nN")) {
-                            app.usedMetaName();
-                        }
-                        app.sortVersions();
-                        appsLoaded.getAndIncrement();
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        versionLinks.add(new App.VersionLink(Binary.fromJSON(binary), object.getString("url"), object.getString("bv"), object.getLong("fs"), object.getString("bID")));
                     }
-                });
-            }
-            System.out.println("Finished sending out parser threads, waiting for them to finish...");
-            executor.shutdown();
-            while (executor.isTerminating()) {
-                executor.awaitTermination(10, TimeUnit.SECONDS);
-                if (executor.isTerminating()) System.out.println("Seen " + links + " links");
-            }
-            System.out.println("Saw " + appCount + " apps, loaded " + appsLoaded);
-            System.out.println("Saw " + versions + " versions, loaded " + versionsLoaded);
-            System.out.println("Saw " + links + " links, loaded " + linksLoaded);
+                    if (versionLinks.isEmpty()) continue;
+                    app.addAppVersionNoSort(versionJSON.getString("ver"),
+                            versionLinks.toArray(new App.VersionLink[]{}),
+                            versionJSON.getString("support"));
+                }
+                if (app.getAllUrls().isEmpty()) {
+                    return null;
+                }
+                app.updateArtwork(appJSON.getString("artver"), appJSON.getString("art"));
+                app.updateDeveloper(appJSON.getString("devVer"), appJSON.getString("dev"));
+                if (appJSON.getBoolean("nN")) {
+                    app.usedMetaName();
+                }
+                app.sortVersions();
+                return app;
+            }).filter(app -> app != null).collect(Collectors.toList());
+            List<String> bundleList = (singleThreadedLoad ? appList.stream() : appList.parallelStream())
+                    .map(app -> app.getBundleID().toLowerCase()).collect(Collectors.toList());
+            apps.clear();
+            apps.addAll((singleThreadedLoad ? appList.stream() : appList.parallelStream())
+                    .filter(app -> bundleList.indexOf(app.getBundleID().toLowerCase())
+                    == bundleList.lastIndexOf(app.getBundleID().toLowerCase())).collect(Collectors.toList()));
         } catch (FileNotFoundException e) {
             System.err.println("File not found! Not importing anything.");
         } catch (Exception e) {

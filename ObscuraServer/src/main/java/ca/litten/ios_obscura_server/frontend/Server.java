@@ -13,10 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -889,7 +886,7 @@ public class Server {
         server.createContext("/debug/searchPost").setHandler(exchange -> {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("\\?");
-            outgoingHeaders.set("Location", "/debug/search/" + splitURI[1].substring(7));
+            outgoingHeaders.set("Location", "/debug/search/" + URLEncoder.encode(splitURI[1].substring(7), StandardCharsets.UTF_8.name()));
             outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(308, 0);
             exchange.close();
@@ -897,7 +894,7 @@ public class Server {
         server.createContext("/searchPost").setHandler(exchange -> {
             Headers outgoingHeaders = exchange.getResponseHeaders();
             String[] splitURI = URLDecoder.decode(exchange.getRequestURI().toString(), StandardCharsets.UTF_8.name()).split("\\?");
-            outgoingHeaders.set("Location", "/search/" + splitURI[1].substring(7));
+            outgoingHeaders.set("Location", "/search/" + URLEncoder.encode(splitURI[1].substring(7), StandardCharsets.UTF_8.name()));
             outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             exchange.sendResponseHeaders(308, 0);
             exchange.close();

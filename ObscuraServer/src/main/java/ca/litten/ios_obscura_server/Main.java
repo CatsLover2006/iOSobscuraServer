@@ -133,6 +133,14 @@ public class Main {
             System.out.println("Error occurred while loading config!");
             throw new RuntimeException(e);
         }
+        System.out.println("Starting server...");
+        try {
+            server = new Server();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        server.startServer();
+        System.out.println("Started server.");
         System.out.println("Loading database...");
         AppList.loadAppDatabaseFile(databaseLocation, Arrays.asList(args).contains("--skipNoAppIcon"),
                 Arrays.asList(args).contains("--skipDataIcon"), Arrays.asList(args).contains("--checkAppUrls"),
@@ -144,14 +152,6 @@ public class Main {
             app.updateDeveloper("-1", "Nobody in Particular");
             AppList.addApp(app);
         }
-        System.out.println("Starting server...");
-        try {
-            server = new Server();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        server.startServer();
-        System.out.println("Started server.");
         ArchiveParser archiveParser = null;
         while (true) {
             try {
