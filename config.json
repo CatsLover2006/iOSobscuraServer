@@ -7,7 +7,11 @@
         "com.atebits.tweetie2",
         "com.ookla.speedtest",
         "org.videolan.vlc-ios",
-        "ca.ianpage.mactracker"
+        "ca.ianpage.mactracker",
+        "com.mojang.minecraftpe",
+        "ca.primatelabs.geekbench2",
+        "com.apple.mobilegarageband",
+        "com.apple.imovie"
     ],
     "database_location": "db.json",
     "port": 12345,
