@@ -342,6 +342,7 @@ public class Server {
                         // Error
                     }
                     exchange.close();
+                    return;
                 }
             }
             outgoingHeaders.set("Location", "/icon");
