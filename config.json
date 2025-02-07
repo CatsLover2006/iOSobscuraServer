@@ -2,6 +2,13 @@
     "host": "iphoneosobscura.litten.ca",
     "donate_url": "",
     "header_tags": "",
+    "featured": [
+        "com.google.ios.youtube",
+        "com.atebits.tweetie2",
+        "com.ookla.speedtest",
+        "org.videolan.vlc-ios",
+        "ca.ianpage.mactracker"
+    ],
     "database_location": "db.json",
     "port": 12345,
     "repeater_url_prefix": "https://proxyserver.litten.ca/",
@@ -67,6 +74,28 @@
         "http://ks3096924.kimsufi.com/sw/Geekbench/Geekbench_2__v2.4.3_Univ_os43.ipa",
         "http://ks3096924.kimsufi.com/sw/Geekbench/Geekbench_3_v3.0.0_.ipa",
         "https://gba4ios.herokuapp.com/download/1.6.2/GBA4iOS.ipa",
-        "http://gba4ios.herokuapp.com/download/1.6.2/GBA4iOS.ipa"
+        "http://gba4ios.herokuapp.com/download/1.6.2/GBA4iOS.ipa",
+        "https://loganserver.net/twitters/ios/official/Twitter 4.1.3 Unpatched.ipa",
+        "https://loganserver.net/twitters/ios/official/Twitter v3.3.6 Unpatched (iOS 3.1).ipa",
+        "https://loganserver.net/twitters/ios/official/Twitter v4.0.1 Unpatched (iOS 4).ipa",
+        "https://loganserver.net/twitters/ios/official/Twitter v5.0.2 Unpatched (iOS 5).ipa",
+        "https://loganserver.net/twitters/ios/official/Twitter v5.0.3 Unpatched (iOS 5) Last Compatible.ipa",
+        "https://loganserver.net/twitters/ios/official/Twitter v5.12 Unpatched (iOS 5) Incompatible.ipa",
+        "http://loganserver.net/twitters/ios/official/Twitter 4.1.3 Unpatched.ipa",
+        "http://loganserver.net/twitters/ios/official/Twitter v3.3.6 Unpatched (iOS 3.1).ipa",
+        "http://loganserver.net/twitters/ios/official/Twitter v4.0.1 Unpatched (iOS 4).ipa",
+        "http://loganserver.net/twitters/ios/official/Twitter v5.0.2 Unpatched (iOS 5).ipa",
+        "http://loganserver.net/twitters/ios/official/Twitter v5.0.3 Unpatched (iOS 5) Last Compatible.ipa",
+        "http://loganserver.net/twitters/ios/official/Twitter v5.12 Unpatched (iOS 5) Incompatible.ipa",
+        "https://loganserver.net/twitters/ios/tweetie2/Tweetie2 v2.0 Unpatched.ipa",
+        "https://loganserver.net/twitters/ios/tweetie2/Tweetie2 v2.1 (iOS 3) Unpatched.ipa",
+        "http://loganserver.net/twitters/ios/tweetie2/Tweetie2 v2.0 Unpatched.ipa",
+        "http://loganserver.net/twitters/ios/tweetie2/Tweetie2 v2.1 (iOS 3) Unpatched.ipa",
+        "https://loganserver.net/twitters/ios/tweetie/Tweetie v1.0.ipa",
+        "http://loganserver.net/twitters/ios/tweetie/Tweetie v1.0.ipa",
+        "https://loganserver.net/twitters/ios/twitterrific/Twitterrific Premium v2.0.2 (iOS 2.2).ipa",
+        "https://loganserver.net/twitters/ios/twitterrific/Twitterrific v2.0.2 (iOS 2.2).ipa",
+        "http://loganserver.net/twitters/ios/twitterrific/Twitterrific Premium v2.0.2 (iOS 2.2).ipa",
+        "http://loganserver.net/twitters/ios/twitterrific/Twitterrific v2.0.2 (iOS 2.2).ipa"
     ]
 }

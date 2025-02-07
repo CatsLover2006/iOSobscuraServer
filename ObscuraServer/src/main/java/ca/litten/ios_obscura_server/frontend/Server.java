@@ -40,6 +40,7 @@ public class Server {
     private static String headerTag = "";
     private static int port;
     private static ErrorPageCreator errorPages;
+    public static LinkedList<String> featuredApps = new LinkedList<>();
     
     static {
         try {
@@ -95,6 +96,13 @@ public class Server {
             repeaterPrefix = object.getString("repeater_url_prefix");
             errorPages = new ErrorPageCreator(headerTag);
             port = object.getInt("port");
+            try {
+                for (Object o : object.getJSONArray("featured")) {
+                    featuredApps.addLast(o.toString());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -140,9 +148,33 @@ public class Server {
             if (debugMode) out.append("<div><div>Debug Mode</div></div>");
             out.append("<div><div><form action=\"");
             if (debugMode) out.append("/debug");
-            out.append("/searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div></fieldset><label>Some Apps</label><fieldset>");
-            List<App> apps = AppList.listAppsThatSupportVersion(iOS_ver);
+            out.append("/searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div></fieldset>");
             App app;
+            if (!featuredApps.isEmpty()) {
+                out.append("<label>Featured Apps</label><fieldset>");
+                boolean foundApps = false;
+                for (String bundleID : featuredApps) {
+                    app = AppList.getAppByBundleID(bundleID);
+                    if (app == null || !app.showAppForVersion(iOS_ver)) continue;
+                    foundApps = true;
+                    if (debugMode)
+                        out.append("<a style=\"height:77px\" href=\"/debug/getAppVersions/").append(app.getBundleID())
+                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                                .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                                .append(app.getBundleID()).append("'\"><center style=\"line-height: 11px\"><br>").append(cutStringTo(app.getName(), 15))
+                                .append("<br><small style=\"font-size:x-small\">").append(app.getBundleID()).append("<br>URL Count: ").append(app.getAllUrls().size()).append("</small></center></div></div></a>");
+                    else
+                        out.append("<a style=\"height:77px\" href=\"getAppVersions/").append(app.getBundleID())
+                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
+                                .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
+                                .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">")
+                                .append(cutStringTo(app.getName(), 15)).append("</center></div></div></a>");
+                }
+                if (!foundApps) out.append("<div><div>No featured apps support your iOS version.</div></div>");
+                out.append("</fieldset>");
+            }
+            out.append("<label>Some Apps</label><fieldset>");
+            List<App> apps = AppList.listAppsThatSupportVersion(iOS_ver);
             int random;
             int s = apps.size();
             if (s == 0) {
@@ -939,7 +971,7 @@ public class Server {
                 } else {
                     AppList.SearchResult app;
                     int s = apps.size();
-                    for (int i = 0; i < Math.min(20, s); i++) {
+                    for (int i = 0; i < Math.min(30, s); i++) {
                         app = apps.remove(0);
                         out.append("<a style=\"height:77px\" href=\"/debug/getAppVersions/").append(app.app.getBundleID())
                                 .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
@@ -996,7 +1028,7 @@ public class Server {
                 } else {
                     App app;
                     int s = apps.size();
-                    for (int i = 0; i < Math.min(20, s); i++) {
+                    for (int i = 0; i < Math.min(30, s); i++) {
                         app = apps.remove(0);
                         out.append("<a style=\"height:77px\" href=\"/getAppVersions/").append(app.getBundleID())
                                 .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
