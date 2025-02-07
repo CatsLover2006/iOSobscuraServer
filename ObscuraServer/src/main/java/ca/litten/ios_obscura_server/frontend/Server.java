@@ -689,7 +689,7 @@ public class Server {
                     if ((App.isVersionLater("14.0", iOS_ver) && App.isVersionLater(iOS_ver, "16.6.1")) || (iOS_ver.startsWith("17.0") && iOS_ver.endsWith(".0")))
                         out.append("<a href=\"apple-magnifier://install?url=").append(versions[i].getUrl())
                                 .append("\"><div><div>Install with TrollStore</div></div></a>");
-                    if (App.isVersionLater("9.0", iOS_ver) && App.isVersionLater(iOS_ver, "14.9"))
+                    if (App.isVersionLater("9.0", iOS_ver) && App.isVersionLater(iOS_ver, "15.-1"))
                         out.append("<a href=\"reprovision://install?url=").append(versions[i].getUrl())
                                 .append("\"><div><div>Install with ReProvision Reborn</div></div></a>");
                     if (App.isVersionLater("12.2", iOS_ver))
@@ -787,7 +787,7 @@ public class Server {
                     if ((App.isVersionLater("14.0", iOS_ver) && App.isVersionLater(iOS_ver, "16.6.1")) || (iOS_ver.startsWith("17.0") && iOS_ver.endsWith(".0")))
                         out.append("<a href=\"apple-magnifier://install?url=").append(versions[i].getUrl())
                                 .append("\"><div><div>Install with TrollStore</div></div></a>");
-                    if (App.isVersionLater("9.0", iOS_ver) && App.isVersionLater(iOS_ver, "14.9"))
+                    if (App.isVersionLater("9.0", iOS_ver) && App.isVersionLater(iOS_ver, "15.-1"))
                         out.append("<a href=\"reprovision://install?url=").append(versions[i].getUrl())
                                 .append("\"><div><div>Install with ReProvision Reborn</div></div></a>");
                     if (App.isVersionLater("12.2", iOS_ver))
