@@ -1,6 +1,7 @@
 package ca.litten.ios_obscura_server.backend;
 
 import ca.litten.ios_obscura_server.parser.Binary;
+import ca.litten.ios_obscura_server.parser.CPUarch;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -18,10 +19,10 @@ public class AppList {
     private static final ArrayList<App> apps = new ArrayList<>();
 
     public static void loadAppDatabaseFile(File file) {
-        loadAppDatabaseFile(file, false, false, false, false, false);
+        loadAppDatabaseFile(file, false, false, false, false, false, false);
     }
     
-    public static void loadAppDatabaseFile(File file, boolean skipEmptyIcons, boolean skipDataIcons, boolean checkUrls, boolean singleThreadedLoad, boolean skipNameless) {
+    public static void loadAppDatabaseFile(File file, boolean skipEmptyIcons, boolean skipDataIcons, boolean checkUrls, boolean singleThreadedLoad, boolean skipNameless, boolean skipArm32) {
         try {
             {
                 System.out.println("Loading database at: " + file.getPath());
@@ -30,8 +31,9 @@ public class AppList {
                 if (skipEmptyIcons) loadingFlags += " skip apps with no icon,";
                 if (skipDataIcons) loadingFlags += " skip apps with embedded icon,";
                 if (checkUrls) loadingFlags += " skip broken links,";
-                if (singleThreadedLoad) loadingFlags += " load on single thread,";
                 if (skipNameless) loadingFlags += " skip apps with no name,";
+                if (skipArm32) loadingFlags += " skip binaries with improperly-scanned binaries,";
+                if (singleThreadedLoad) loadingFlags += " load on single thread,";
                 if (loadingFlags.isEmpty()) loadingFlags = " none,";
                 loadingFlags = loadingFlags.substring(0, loadingFlags.length() - 1);
                 System.out.println(loadingFlags);
@@ -115,7 +117,13 @@ public class AppList {
                         if (object.has("bin")) {
                             binary = object.getJSONObject("bin");
                         }
-                        versionLinks.add(new App.VersionLink(Binary.fromJSON(binary), object.getString("url"), object.getString("bv"), object.getLong("fs"), object.getString("bID")));
+                        Binary bin = Binary.fromJSON(binary);
+                        if (skipArm32 && (bin.getEncryptionMatrix().isEmpty() || // Long condition, I know
+                                (bin.supportsArchitecture(CPUarch.ARM32) && bin.getEncryptionMatrix().size() == 1) ||
+                                (bin.supportsArchitecture(CPUarch.UNKNOWN) && bin.getEncryptionMatrix().size() == 1) ||
+                                (bin.supportsArchitecture(CPUarch.ARM32) && bin.supportsArchitecture(CPUarch.UNKNOWN)
+                                        && bin.getEncryptionMatrix().size() == 2))) continue;
+                        versionLinks.add(new App.VersionLink(bin, object.getString("url"), object.getString("bv"), object.getLong("fs"), object.getString("bID")));
                     }
                     if (versionLinks.isEmpty()) continue;
                     app.addAppVersionNoSort(versionJSON.getString("ver"),

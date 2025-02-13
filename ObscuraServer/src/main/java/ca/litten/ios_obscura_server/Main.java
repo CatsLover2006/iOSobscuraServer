@@ -106,11 +106,12 @@ public class Main {
     
     public static void main(String[] args) {
         if (Arrays.asList(args).contains("--help")) {
+            System.out.println("--noParse: disable app parsing to save RAM");
             System.out.println("--skipNoAppIcon: skips apps with no app icon when loading the database");
             System.out.println("--skipDataIcon: skips apps with a data URI icon when loading the database");
             System.out.println("--skipNameless: skips apps with no name when loading the database");
             System.out.println("--checkAppUrls: check app URLs during database loading, skip loading if an error code is returned");
-            System.out.println("--noParse: disable app parsing to save RAM");
+            System.out.println("--skipBadBinary: skips apps with improperly-scanned binaries");
             System.out.println("--singleThreadLoad: load app database on a single thread during initialization");
             System.out.println("--help: display this message");
             return;
@@ -144,7 +145,8 @@ public class Main {
         System.out.println("Loading database...");
         AppList.loadAppDatabaseFile(databaseLocation, Arrays.asList(args).contains("--skipNoAppIcon"),
                 Arrays.asList(args).contains("--skipDataIcon"), Arrays.asList(args).contains("--checkAppUrls"),
-                Arrays.asList(args).contains("--singleThreadLoad"), Arrays.asList(args).contains("--skipNameless"));
+                Arrays.asList(args).contains("--singleThreadLoad"), Arrays.asList(args).contains("--skipNameless"),
+                Arrays.asList(args).contains("--skipBadBinary"));
         if (AppList.getAppByBundleID("nil") == null) {
             System.out.println("New database? Adding broken apps entry...");
             App app = new App("Broken Apps", "nil");
