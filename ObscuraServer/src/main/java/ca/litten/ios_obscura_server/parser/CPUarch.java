@@ -26,7 +26,7 @@ public enum CPUarch {
     ARM64_32(new byte[]{2, 0, 0, 12}, null),
 
     // Intel Types
-    x86(new byte[]{0, 0, 0, 7}, null), // Supposed to be unused
+    i386(new byte[]{0, 0, 0, 7}, null), // Supposed to be unused
     x86_64(new byte[]{1, 0, 0, 7}, null), // Supposed to be unused
 
     // PowerPC Types
