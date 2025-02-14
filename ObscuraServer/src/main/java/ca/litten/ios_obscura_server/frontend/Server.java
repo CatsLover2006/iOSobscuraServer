@@ -118,7 +118,7 @@ public class Server {
         lastReload = System.currentTimeMillis();
         server = provider.createHttpServer(new InetSocketAddress(port), -1);
         serverExecutor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 4,
-                Runtime.getRuntime().availableProcessors() * 128,
+                Runtime.getRuntime().availableProcessors() * 1024,
                 120, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
         server.setExecutor(serverExecutor);
         server.createContext("/").setHandler(exchange -> {
