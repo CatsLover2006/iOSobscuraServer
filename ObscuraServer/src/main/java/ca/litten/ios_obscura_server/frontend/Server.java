@@ -19,6 +19,9 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class Server {
@@ -40,7 +43,8 @@ public class Server {
     private static String headerTag = "";
     private static int port;
     private static ErrorPageCreator errorPages;
-    public static LinkedList<String> featuredApps = new LinkedList<>();
+    private static final LinkedList<String> featuredApps = new LinkedList<>();
+    private final ThreadPoolExecutor serverExecutor;
     
     static {
         try {
@@ -113,6 +117,10 @@ public class Server {
     public Server() throws IOException {
         lastReload = System.currentTimeMillis();
         server = provider.createHttpServer(new InetSocketAddress(port), -1);
+        serverExecutor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 4,
+                Runtime.getRuntime().availableProcessors() * 1024,
+                120, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        server.setExecutor(serverExecutor);
         server.createContext("/").setHandler(exchange -> {
             Headers incomingHeaders = exchange.getRequestHeaders();
             Headers outgoingHeaders = exchange.getResponseHeaders();
