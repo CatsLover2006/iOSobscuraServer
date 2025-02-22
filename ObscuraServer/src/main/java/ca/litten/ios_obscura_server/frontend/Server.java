@@ -148,32 +148,32 @@ public class Server {
             if (debugMode) out.append("<div><div>Debug Mode</div></div>");
             out.append("<div><div><form action=\"");
             if (debugMode) out.append("/debug");
-            out.append("/searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div></fieldset>");
+            out.append("/searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img class=\"search\" src=\"/searchIcon\"></button></form></div></div></fieldset>");
             App app;
             if (!featuredApps.isEmpty()) {
-                out.append("<label>Featured Apps</label><fieldset>");
+                out.append("<label>Featured Apps</label><fieldset class=\"iconList\">");
                 boolean foundApps = false;
                 for (String bundleID : featuredApps) {
                     app = AppList.getAppByBundleID(bundleID);
                     if (app == null || !app.showAppForVersion(iOS_ver)) continue;
                     foundApps = true;
                     if (debugMode)
-                        out.append("<a style=\"height:77px\" href=\"/debug/getAppVersions/").append(app.getBundleID())
-                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                        out.append("<a href=\"/debug/getAppVersions/").append(app.getBundleID())
+                                .append("\"><div><div><img loading=\"lazy\" class=\"appIcon\" src=\"/getAppIcon/")
                                 .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                                 .append(app.getBundleID()).append("'\"><center style=\"line-height: 11px\"><br>").append(cutStringTo(app.getName(), 15))
                                 .append("<br><small style=\"font-size:x-small\">").append(app.getBundleID()).append("<br>URL Count: ").append(app.getAllUrls().size()).append("</small></center></div></div></a>");
                     else
-                        out.append("<a style=\"height:77px\" href=\"getAppVersions/").append(app.getBundleID())
-                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
+                        out.append("<a href=\"getAppVersions/").append(app.getBundleID())
+                                .append("\"><div><div><img loading=\"lazy\" class=\"appIcon\" src=\"getAppIcon/")
                                 .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
-                                .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">")
+                                .append(app.getBundleID()).append("'\"><center>")
                                 .append(cutStringTo(app.getName(), 15)).append("</center></div></div></a>");
                 }
                 if (!foundApps) out.append("<div><div>No featured apps support your iOS version.</div></div>");
                 out.append("</fieldset>");
             }
-            out.append("<label>Some Apps</label><fieldset>");
+            out.append("<label>Some Apps</label><fieldset class=\"iconList\">");
             List<App> apps = AppList.listAppsThatSupportVersion(iOS_ver);
             int random;
             int s = apps.size();
@@ -183,16 +183,16 @@ public class Server {
                 random = rand.nextInt(apps.size());
                 app = apps.remove(random);
                 if (debugMode)
-                    out.append("<a style=\"height:77px\" href=\"/debug/getAppVersions/").append(app.getBundleID())
-                            .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                    out.append("<a href=\"/debug/getAppVersions/").append(app.getBundleID())
+                            .append("\"><div><div><img loading=\"lazy\" class=\"appIcon\" src=\"/getAppIcon/")
                             .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                             .append(app.getBundleID()).append("'\"><center style=\"line-height: 11px\"><br>").append(cutStringTo(app.getName(), 15))
                             .append("<br><small style=\"font-size:x-small\">").append(app.getBundleID()).append("<br>URL Count: ").append(app.getAllUrls().size()).append("</small></center></div></div></a>");
                 else
-                    out.append("<a style=\"height:77px\" href=\"getAppVersions/").append(app.getBundleID())
-                            .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
+                    out.append("<a href=\"getAppVersions/").append(app.getBundleID())
+                            .append("\"><div><div><img loading=\"lazy\" class=\"appIcon\" src=\"getAppIcon/")
                             .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
-                            .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">")
+                            .append(app.getBundleID()).append("'\"><center>")
                             .append(cutStringTo(app.getName(), 15)).append("</center></div></div></a>");
             }
             out.append("</fieldset><fieldset><a href=\"https://github.com/CatsLover2006/iOSobscuraServer\"><div><div>Check out the Github</div></div></a><a href=\"/stats\"><div><div>Server Stats</div></div></a>");
@@ -213,7 +213,7 @@ public class Server {
             boolean macOS_connection = userAgent.contains("Macintosh");
             StringBuilder out = new StringBuilder();
             String styleVariant = "3163da6b7950852a03d31ea77735f4e1d2ba6699";
-            String radius = "border-radius:15.625%;";
+            String radius = "border-radius:15.625%;-webkit-border-radius:8.90625px";
             if (iOS_connection) {
                 String[] split1 = userAgent.split("like Mac OS X");
                 String[] split2 = split1[0].split(" ");
@@ -247,7 +247,7 @@ public class Server {
             }
             out.append("@import url(\"https://cydia.saurik.com/cytyle/style-")
                     .append(styleVariant).append(".css\");@import url(\"http://cydia.saurik.com/cytyle/style-")
-                    .append(styleVariant).append(".css\");img{").append(radius).append("}body{max-width:320px}");
+                    .append(styleVariant).append(".css\");.appIcon{float:left;height:57px;width:57px;").append(radius).append("}body{max-width:320px}.search{height:18px;border-radius:50%;-webkit-border-radius:9px}.iconList a{height:77px}.iconList a div div{height:77px;overflow:hidden}.iconList a div div center{line-height:57px}");
             outgoingHeaders.set("Cache-Control", "max-age=172800,immutable");
             outgoingHeaders.set("Content-Type", "text/css; charset=utf-8");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
@@ -469,7 +469,7 @@ public class Server {
                 return;
             }
             out.append(Templates.generateBasicHeader(app.getName(), headerTag))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" class=\"appIcon\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                     .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
@@ -519,7 +519,7 @@ public class Server {
                 return;
             }
             out.append(Templates.generateBasicHeader(app.getName(), headerTag))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" class=\"appIcon\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                     .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
@@ -642,7 +642,7 @@ public class Server {
                 return;
             }
             out.append(Templates.generateBasicHeader(app.getName() + " " + splitURI[3], headerTag))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" class=\"appIcon\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                     .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
@@ -740,7 +740,7 @@ public class Server {
                 return;
             }
             out.append(Templates.generateBasicHeader(app.getName() + " " + splitURI[4], headerTag))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div style=\"height:57px;overflow:hidden\"><img loading=\"lazy\" class=\"appIcon\" src=\"/getAppIcon/")
                     .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                     .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
@@ -829,7 +829,7 @@ public class Server {
                 else iOS_ver = iOS_ver.substring(0, iOS_ver.length() - 1);
             }
             out.append(Templates.generateBasicHeader("Server Stats", headerTag))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Server Stats</strong></center></div></div><div><div><form action=\"searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"/\"><div><div>Return to Homepage</div></div></a></fieldset><label>Stats</label><fieldset>");
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Server Stats</strong></center></div></div><div><div><form action=\"searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img class=\"search\" src=\"/searchIcon\"></button></form></div></div><a href=\"/\"><div><div>Return to Homepage</div></div></a></fieldset><label>Stats</label><fieldset>");
             List<App> apps = AppList.searchApps("");
             out.append("<div><div style=\"overflow:auto\">App Count<span style=\"float:right\">").append(apps.size())
                     .append("</span></div></div><div><div style=\"overflow:auto\">Version Count<span style=\"float:right\">")
@@ -888,10 +888,10 @@ public class Server {
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><strong>HTML Sitemap</strong></div></div>");
             out.append("<a href=\"https://").append(serverName).append("/\"><div><div>Homepage</div></div></a></fieldset>");
             for (App app : AppList.searchApps("", iOS_ver)) {
-                out.append("<label>").append(app.getBundleID()).append("</label><fieldset><a style=\"height:77px\" href=\"getAppVersions/")
-                        .append(app.getBundleID()).append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"getAppIcon/")
+                out.append("<label>").append(app.getBundleID()).append("</label><fieldset class=\"iconList\"><a href=\"getAppVersions/")
+                        .append(app.getBundleID()).append("\"><div><div><img loading=\"lazy\" class=\"appIcon\" src=\"getAppIcon/")
                         .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
-                        .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
+                        .append(app.getBundleID()).append("'\"><center>").append(cutStringTo(app.getName(), 15))
                         .append("</center></div></div></a>");
                 for (String version : app.getSupportedAppVersions(iOS_ver))
                     out.append("<a href=\"/getAppVersionLinks/").append(app.getBundleID()).append("/").append(version)
@@ -969,9 +969,9 @@ public class Server {
             out.append(Templates.generateBasicHeader("Search: " + query, headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div><div><div>Debug Mode<small style=\"font-size:x-small\"><br>Relevance Cutoff: ")
                     .append(AppList.getSearchRelevanceCutoff(query)).append("</small></div></div><div><div><form action=\"/debug/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
-                    .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+                    .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img class=\"search\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
             if (!query.isEmpty()) {
-                out.append("<label>Search Results</label><fieldset>");
+                out.append("<label>Search Results</label><fieldset class=\"iconList\">");
                 List<AppList.SearchResult> apps = AppList.searchAppsWithWeights(query, iOS_ver);
                 if (apps.isEmpty()) {
                     out.append("<div><div>Couldn't find anything!</div></div><div><div>Make sure you've typed everything correctly, or try shortening your query.</div></div>");
@@ -980,8 +980,8 @@ public class Server {
                     int s = apps.size();
                     for (int i = 0; i < Math.min(30, s); i++) {
                         app = apps.remove(0);
-                        out.append("<a style=\"height:77px\" href=\"/debug/getAppVersions/").append(app.app.getBundleID())
-                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                        out.append("<a href=\"/debug/getAppVersions/").append(app.app.getBundleID())
+                                .append("\"><div><div><img loading=\"lazy\" class=\"appIcon\" src=\"/getAppIcon/")
                                 .append(app.app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                                 .append(app.app.getBundleID()).append("'\"><center style=\"line-height: 11px\"><br>").append(cutStringTo(app.app.getName(), 15))
                                 .append("<br><small style=\"font-size:x-small\">").append(app.app.getBundleID()).append("<br>").append(app.resultPossibility).append("</small></center></div></div></a>");
@@ -1026,9 +1026,9 @@ public class Server {
             }
             out.append(Templates.generateBasicHeader("Search: " + query, headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div><div><div><form action=\"/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
-                    .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img style=\"height:18px;border-radius:50%\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+                    .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img class=\"search\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
             if (!query.isEmpty()) {
-                out.append("<label>Search Results</label><fieldset>");
+                out.append("<label>Search Results</label><fieldset class=\"iconList\">");
                 List<App> apps = AppList.searchApps(query, iOS_ver);
                 if (apps.isEmpty()) {
                     out.append("<div><div>Couldn't find anything!</div></div><div><div>Make sure you've typed everything correctly, or try shortening your query.</div></div>");
@@ -1037,10 +1037,10 @@ public class Server {
                     int s = apps.size();
                     for (int i = 0; i < Math.min(30, s); i++) {
                         app = apps.remove(0);
-                        out.append("<a style=\"height:77px\" href=\"/getAppVersions/").append(app.getBundleID())
-                                .append("\"><div><div style=\"height:77px;overflow:hidden\"><img loading=\"lazy\" style=\"float:left;height:57px;width:57px\" src=\"/getAppIcon/")
+                        out.append("<a href=\"/getAppVersions/").append(app.getBundleID())
+                                .append("\"><div><div><img loading=\"lazy\" class=\"appIcon\" src=\"/getAppIcon/")
                                 .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
-                                .append(app.getBundleID()).append("'\"><center style=\"line-height:57px\">").append(cutStringTo(app.getName(), 15))
+                                .append(app.getBundleID()).append("'\"><center>").append(cutStringTo(app.getName(), 15))
                                 .append("</center></div></div></a>");
                     }
                 }
