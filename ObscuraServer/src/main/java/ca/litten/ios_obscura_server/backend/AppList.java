@@ -18,6 +18,8 @@ import java.util.stream.StreamSupport;
 
 public class AppList {
     private static final ArrayList<App> apps = new ArrayList<>();
+    private static final ArrayList<App> loadingApps = new ArrayList<>(1);
+    private static boolean loading = true;
 
     public static void loadAppDatabaseFile(File file) {
         loadAppDatabaseFile(file, false, false, false, false, false, false);
@@ -43,6 +45,14 @@ public class AppList {
             "2wiIGJlZ2luPSJzcGlubmVyXzdnQUsuYmVnaW4rMC4xcyIgYXR0cmlidXRlTmFtZT0iciIgY2FsY01vZGU9InNwbGluZSIgZHVyPSIwLjZzIiB2YWx1ZXM9IjE7MjsxIiBrZXlTcGxpbmVzPSIuMjcsLjQyLC4zNywuOTk7LjUzLDAsLjYxLC43MyIvPjwvY2l" +
             "yY2xlPjxhbmltYXRlVHJhbnNmb3JtIGF0dHJpYnV0ZU5hbWU9InRyYW5zZm9ybSIgdHlwZT0icm90YXRlIiBkdXI9IjZzIiB2YWx1ZXM9IjM2MCAxMiAxMjswIDEyIDEyIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSIvPjwvZz48L3N2Zz4="; // Yes it's long
     
+    static {
+        App app = new App("Loading...", "nil");
+        app.updateArtwork("0.0", loadingImg);
+        app.addAppVersionNoSort("nil",
+                new App.VersionLink[]{new App.VersionLink(null, "/", "nil", 0, "nil")}, "0");
+        loadingApps.add(app);
+    }
+    
     public static void loadAppDatabaseFile(File file, boolean skipEmptyIcons, boolean skipDataIcons, boolean checkUrls, boolean singleThreadedLoad, boolean skipNameless, boolean skipArm32) {
         try {
             {
@@ -59,6 +69,7 @@ public class AppList {
                 loadingFlags = loadingFlags.substring(0, loadingFlags.length() - 1);
                 System.out.println(loadingFlags);
             } // Initial message, in curly braces for memory management
+            loading = true;
             FileReader reader = new FileReader(file);
             StringBuilder out = new StringBuilder();
             char[] buf = new char[4096];
@@ -67,13 +78,6 @@ public class AppList {
                 read = reader.read(buf);
                 for (int i = 0; i < read; i++)
                     out.append(buf[i]);
-            }
-            if (apps.isEmpty()) {
-                App app = new App("Loading...", "nil");
-                app.updateArtwork("0.0", loadingImg);
-                app.addAppVersionNoSort("nil",
-                        new App.VersionLink[]{new App.VersionLink(null, "/", "nil", 0, "nil")}, "0");
-                apps.add(app);
             }
             JSONArray appArray = new JSONArray(out.toString());
             Stream<Object> appStream = StreamSupport.stream(appArray.spliterator(), !singleThreadedLoad);
@@ -175,6 +179,7 @@ public class AppList {
             apps.addAll((singleThreadedLoad ? appList.stream() : appList.parallelStream())
                     .filter(app -> bundleList.indexOf(app.getBundleID().toLowerCase())
                     == bundleList.lastIndexOf(app.getBundleID().toLowerCase())).collect(Collectors.toList()));
+            loading = false;
         } catch (FileNotFoundException e) {
             System.err.println("File not found! Not importing anything.");
         } catch (Exception e) {
@@ -196,12 +201,17 @@ public class AppList {
         }
     }
     
+    private static ArrayList<App> getApps() {
+        if (loading && apps.isEmpty()) return loadingApps;
+        return apps;
+    }
+    
     public static List<App> listAppsThatSupportVersion(String version) {
-        return apps.parallelStream().filter(app -> app.showAppForVersion(version)).collect(Collectors.toList());
+        return getApps().parallelStream().filter(app -> app.showAppForVersion(version)).collect(Collectors.toList());
     }
     
     public static App getAppByBundleID(String bundleID) {
-        List<App> theApp = apps.parallelStream().filter(app -> (app.getBundleID().equals(bundleID))).collect(Collectors.toList());
+        List<App> theApp = getApps().parallelStream().filter(app -> (app.getBundleID().equals(bundleID))).collect(Collectors.toList());
         if (theApp.isEmpty()) return null;
         return theApp.get(0);
     }
@@ -270,21 +280,21 @@ public class AppList {
     public static final double AppRelevanceCutoff = 46.123456789;
     
     public static List<App> searchApps(String query, String version) {
-        return apps.parallelStream().filter(app -> app.showAppForVersion(version))
+        return getApps().parallelStream().filter(app -> app.showAppForVersion(version))
                 .map(app -> new SearchResult(app, query))
                 .filter(app -> app.resultPossibility >= query.length() * AppRelevanceCutoff)
                 .sorted(Comparator.comparingDouble(app -> -app.resultPossibility))
                 .map(app -> app.app).collect(Collectors.toList());
     }
     public static List<SearchResult> searchAppsWithWeights(String query, String version) {
-        return apps.parallelStream().filter(app -> app.showAppForVersion(version))
+        return getApps().parallelStream().filter(app -> app.showAppForVersion(version))
                 .map(app -> new SearchResult(app, query))
                 .filter(app -> app.resultPossibility >= query.length() * AppRelevanceCutoff)
                 .sorted(Comparator.comparingDouble(app -> -app.resultPossibility)).collect(Collectors.toList());
     }
     
     public static List<App> searchApps(String query) {
-        return apps.parallelStream().map(app -> new SearchResult(app, query))
+        return getApps().parallelStream().map(app -> new SearchResult(app, query))
                 .filter(app -> app.resultPossibility >= query.length() * AppRelevanceCutoff)
                 .sorted(Comparator.comparingDouble(app -> -app.resultPossibility))
                 .map(app -> app.app).collect(Collectors.toList());
@@ -295,13 +305,13 @@ public class AppList {
     }
     
     public static List<SearchResult> searchAppsWithWeights(String query) {
-        return apps.parallelStream().map(app -> new SearchResult(app, query))
+        return getApps().parallelStream().map(app -> new SearchResult(app, query))
                 .filter(app -> app.resultPossibility >= query.length() * AppRelevanceCutoff)
                 .sorted(Comparator.comparingDouble(app -> -app.resultPossibility)).collect(Collectors.toList());
     }
     
     public static boolean appUrlAlreadyExists(String url) {
-        return !apps.parallelStream().filter(app -> !app.getAllUrls().parallelStream().filter(string -> string.equals(url))
+        return !getApps().parallelStream().filter(app -> !app.getAllUrls().parallelStream().filter(string -> string.equals(url))
                         .collect(Collectors.toList()).isEmpty()).collect(Collectors.toList()).isEmpty();
     }
 }
