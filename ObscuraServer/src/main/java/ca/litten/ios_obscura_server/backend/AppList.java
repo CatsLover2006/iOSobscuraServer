@@ -2,6 +2,7 @@ package ca.litten.ios_obscura_server.backend;
 
 import ca.litten.ios_obscura_server.parser.Binary;
 import ca.litten.ios_obscura_server.parser.CPUarch;
+import com.sun.xml.internal.ws.util.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,6 +22,26 @@ public class AppList {
     public static void loadAppDatabaseFile(File file) {
         loadAppDatabaseFile(file, false, false, false, false, false, false);
     }
+    
+    private static String loadingImg = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Zz48Y2lyY2xlIGN4PSIxMiIgY3k9I" +
+            "jMiIHI9IjEiPjxhbmltYXRlIGlkPSJzcGlubmVyXzdaNzMiIGJlZ2luPSIwO3NwaW5uZXJfdEtzdS5lbmQtMC41cyIgYXR0cmlidXRlTmFtZT0iciIgY2FsY01vZGU9InNwbGluZSIgZHVyPSIwLjZzIiB2YWx1ZXM9IjE7MjsxIiBrZXlTcGxpbmVzPSIuMjc" +
+            "sLjQyLC4zNywuOTk7LjUzLDAsLjYxLC43MyIvPjwvY2lyY2xlPjxjaXJjbGUgY3g9IjE2LjUwIiBjeT0iNC4yMSIgcj0iMSI+PGFuaW1hdGUgaWQ9InNwaW5uZXJfV2Q4NyIgYmVnaW49InNwaW5uZXJfN1o3My5iZWdpbiswLjFzIiBhdHRyaWJ1dGVOYW1lP" +
+            "SJyIiBjYWxjTW9kZT0ic3BsaW5lIiBkdXI9IjAuNnMiIHZhbHVlcz0iMTsyOzEiIGtleVNwbGluZXM9Ii4yNywuNDIsLjM3LC45OTsuNTMsMCwuNjEsLjczIi8+PC9jaXJjbGU+PGNpcmNsZSBjeD0iNy41MCIgY3k9IjQuMjEiIHI9IjEiPjxhbmltYXRlIGl" +
+            "kPSJzcGlubmVyX3RLc3UiIGJlZ2luPSJzcGlubmVyXzlRbGMuYmVnaW4rMC4xcyIgYXR0cmlidXRlTmFtZT0iciIgY2FsY01vZGU9InNwbGluZSIgZHVyPSIwLjZzIiB2YWx1ZXM9IjE7MjsxIiBrZXlTcGxpbmVzPSIuMjcsLjQyLC4zNywuOTk7LjUzLDAsL" +
+            "jYxLC43MyIvPjwvY2lyY2xlPjxjaXJjbGUgY3g9IjE5Ljc5IiBjeT0iNy41MCIgcj0iMSI+PGFuaW1hdGUgaWQ9InNwaW5uZXJfbE1NTyIgYmVnaW49InNwaW5uZXJfV2Q4Ny5iZWdpbiswLjFzIiBhdHRyaWJ1dGVOYW1lPSJyIiBjYWxjTW9kZT0ic3BsaW5" +
+            "lIiBkdXI9IjAuNnMiIHZhbHVlcz0iMTsyOzEiIGtleVNwbGluZXM9Ii4yNywuNDIsLjM3LC45OTsuNTMsMCwuNjEsLjczIi8+PC9jaXJjbGU+PGNpcmNsZSBjeD0iNC4yMSIgY3k9IjcuNTAiIHI9IjEiPjxhbmltYXRlIGlkPSJzcGlubmVyXzlRbGMiIGJlZ" +
+            "2luPSJzcGlubmVyX0toeHYuYmVnaW4rMC4xcyIgYXR0cmlidXRlTmFtZT0iciIgY2FsY01vZGU9InNwbGluZSIgZHVyPSIwLjZzIiB2YWx1ZXM9IjE7MjsxIiBrZXlTcGxpbmVzPSIuMjcsLjQyLC4zNywuOTk7LjUzLDAsLjYxLC43MyIvPjwvY2lyY2xlPjx" +
+            "jaXJjbGUgY3g9IjIxLjAwIiBjeT0iMTIuMDAiIHI9IjEiPjxhbmltYXRlIGlkPSJzcGlubmVyXzVMOXQiIGJlZ2luPSJzcGlubmVyX2xNTU8uYmVnaW4rMC4xcyIgYXR0cmlidXRlTmFtZT0iciIgY2FsY01vZGU9InNwbGluZSIgZHVyPSIwLjZzIiB2YWx1Z" +
+            "XM9IjE7MjsxIiBrZXlTcGxpbmVzPSIuMjcsLjQyLC4zNywuOTk7LjUzLDAsLjYxLC43MyIvPjwvY2lyY2xlPjxjaXJjbGUgY3g9IjMuMDAiIGN5PSIxMi4wMCIgcj0iMSI+PGFuaW1hdGUgaWQ9InNwaW5uZXJfS2h4diIgYmVnaW49InNwaW5uZXJfbGQ2UC5" +
+            "iZWdpbiswLjFzIiBhdHRyaWJ1dGVOYW1lPSJyIiBjYWxjTW9kZT0ic3BsaW5lIiBkdXI9IjAuNnMiIHZhbHVlcz0iMTsyOzEiIGtleVNwbGluZXM9Ii4yNywuNDIsLjM3LC45OTsuNTMsMCwuNjEsLjczIi8+PC9jaXJjbGU+PGNpcmNsZSBjeD0iMTkuNzkiI" +
+            "GN5PSIxNi41MCIgcj0iMSI+PGFuaW1hdGUgaWQ9InNwaW5uZXJfQmZURCIgYmVnaW49InNwaW5uZXJfNUw5dC5iZWdpbiswLjFzIiBhdHRyaWJ1dGVOYW1lPSJyIiBjYWxjTW9kZT0ic3BsaW5lIiBkdXI9IjAuNnMiIHZhbHVlcz0iMTsyOzEiIGtleVNwbGl" +
+            "uZXM9Ii4yNywuNDIsLjM3LC45OTsuNTMsMCwuNjEsLjczIi8+PC9jaXJjbGU+PGNpcmNsZSBjeD0iNC4yMSIgY3k9IjE2LjUwIiByPSIxIj48YW5pbWF0ZSBpZD0ic3Bpbm5lcl9sZDZQIiBiZWdpbj0ic3Bpbm5lcl9YeUJzLmJlZ2luKzAuMXMiIGF0dHJpY" +
+            "nV0ZU5hbWU9InIiIGNhbGNNb2RlPSJzcGxpbmUiIGR1cj0iMC42cyIgdmFsdWVzPSIxOzI7MSIga2V5U3BsaW5lcz0iLjI3LC40MiwuMzcsLjk5Oy41MywwLC42MSwuNzMiLz48L2NpcmNsZT48Y2lyY2xlIGN4PSIxNi41MCIgY3k9IjE5Ljc5IiByPSIxIj4" +
+            "8YW5pbWF0ZSBpZD0ic3Bpbm5lcl83Z0FLIiBiZWdpbj0ic3Bpbm5lcl9CZlRELmJlZ2luKzAuMXMiIGF0dHJpYnV0ZU5hbWU9InIiIGNhbGNNb2RlPSJzcGxpbmUiIGR1cj0iMC42cyIgdmFsdWVzPSIxOzI7MSIga2V5U3BsaW5lcz0iLjI3LC40MiwuMzcsL" +
+            "jk5Oy41MywwLC42MSwuNzMiLz48L2NpcmNsZT48Y2lyY2xlIGN4PSI3LjUwIiBjeT0iMTkuNzkiIHI9IjEiPjxhbmltYXRlIGlkPSJzcGlubmVyX1h5QnMiIGJlZ2luPSJzcGlubmVyX0hpU2wuYmVnaW4rMC4xcyIgYXR0cmlidXRlTmFtZT0iciIgY2FsY01" +
+            "vZGU9InNwbGluZSIgZHVyPSIwLjZzIiB2YWx1ZXM9IjE7MjsxIiBrZXlTcGxpbmVzPSIuMjcsLjQyLC4zNywuOTk7LjUzLDAsLjYxLC43MyIvPjwvY2lyY2xlPjxjaXJjbGUgY3g9IjEyIiBjeT0iMjEiIHI9IjEiPjxhbmltYXRlIGlkPSJzcGlubmVyX0hpU" +
+            "2wiIGJlZ2luPSJzcGlubmVyXzdnQUsuYmVnaW4rMC4xcyIgYXR0cmlidXRlTmFtZT0iciIgY2FsY01vZGU9InNwbGluZSIgZHVyPSIwLjZzIiB2YWx1ZXM9IjE7MjsxIiBrZXlTcGxpbmVzPSIuMjcsLjQyLC4zNywuOTk7LjUzLDAsLjYxLC43MyIvPjwvY2l" +
+            "yY2xlPjxhbmltYXRlVHJhbnNmb3JtIGF0dHJpYnV0ZU5hbWU9InRyYW5zZm9ybSIgdHlwZT0icm90YXRlIiBkdXI9IjZzIiB2YWx1ZXM9IjM2MCAxMiAxMjswIDEyIDEyIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSIvPjwvZz48L3N2Zz4="; // Yes it's long
     
     public static void loadAppDatabaseFile(File file, boolean skipEmptyIcons, boolean skipDataIcons, boolean checkUrls, boolean singleThreadedLoad, boolean skipNameless, boolean skipArm32) {
         try {
@@ -46,6 +67,13 @@ public class AppList {
                 read = reader.read(buf);
                 for (int i = 0; i < read; i++)
                     out.append(buf[i]);
+            }
+            if (apps.isEmpty()) {
+                App app = new App("Loading...", "nil");
+                app.updateArtwork("0.0", loadingImg);
+                app.addAppVersionNoSort("nil",
+                        new App.VersionLink[]{new App.VersionLink(null, "/", "nil", 0, "nil")}, "0");
+                apps.add(app);
             }
             JSONArray appArray = new JSONArray(out.toString());
             Stream<Object> appStream = StreamSupport.stream(appArray.spliterator(), !singleThreadedLoad);
