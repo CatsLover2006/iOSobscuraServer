@@ -145,7 +145,7 @@ public class Server {
                     || exchangeURI.toLowerCase().equals("/debug/"))) {
                 byte[] bytes = errorPages.general404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
-                exchange.getResponseBody().write(bytes);
+                if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
@@ -210,7 +210,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/getCSS").setHandler(exchange -> {
@@ -260,7 +260,7 @@ public class Server {
             outgoingHeaders.set("Content-Type", "text/css; charset=utf-8");
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/getHeader").setHandler(exchange -> {
@@ -280,7 +280,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/getProxiedAppIcon/").setHandler(exchange -> {
@@ -367,9 +367,11 @@ public class Server {
             } else if (app.getArtworkURL().startsWith("data")) {
                 String[] relevantData = app.getArtworkURL().split(";");
                 outgoingHeaders.set("Content-Type", relevantData[0].split(":")[1]);
+                if (relevantData[0].split(":")[1].contains("svg"))
+                    outgoingHeaders.set("Cache-Control", "no-cache");
                 byte[] data = Base64.getDecoder().decode(relevantData[1].split(",")[1]);
                 exchange.sendResponseHeaders(200, data.length);
-                exchange.getResponseBody().write(data);
+                if (exchange.getRequestMethod() != "HEAD") exchange.getResponseBody().write(data);
                 exchange.close();
                 return;
             } else if (app.getArtworkURL().startsWith("http")) {
@@ -444,7 +446,7 @@ public class Server {
             outgoingHeaders.set("Cache-Control", "max-age=1800,immutable");
             byte[] bytes = root.toString().getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/debug/getAppVersions/").setHandler(exchange -> {
@@ -472,7 +474,7 @@ public class Server {
             if (app == null) {
                 byte[] bytes = errorPages.app404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
-                exchange.getResponseBody().write(bytes);
+                if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
@@ -494,7 +496,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/getAppVersions/").setHandler(exchange -> {
@@ -522,7 +524,7 @@ public class Server {
             if (app == null) {
                 byte[] bytes = errorPages.app404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
-                exchange.getResponseBody().write(bytes);
+                if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
@@ -543,7 +545,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/generateInstallManifest/").setHandler(exchange -> {
@@ -580,7 +582,7 @@ public class Server {
             byte[] bytes = root.toXMLPropertyList().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/generateProxiedInstallManifest/").setHandler(exchange -> {
@@ -617,7 +619,7 @@ public class Server {
             byte[] bytes = root.toXMLPropertyList().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/getAppVersionLinks/").setHandler(exchange -> {
@@ -645,7 +647,7 @@ public class Server {
             if (app == null) {
                 byte[] bytes = errorPages.app404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
-                exchange.getResponseBody().write(bytes);
+                if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
@@ -714,7 +716,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         
@@ -743,7 +745,7 @@ public class Server {
             if (app == null) {
                 byte[] bytes = errorPages.app404.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(404, bytes.length);
-                exchange.getResponseBody().write(bytes);
+                if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
                 exchange.close();
                 return;
             }
@@ -813,7 +815,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/stats").setHandler(exchange -> {
@@ -869,7 +871,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/htmlSitemap").setHandler(exchange -> {
@@ -910,7 +912,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/sitemap").setHandler(exchange -> {
@@ -927,7 +929,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/debug/searchPost").setHandler(exchange -> {
@@ -1001,7 +1003,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/search").setHandler(exchange -> {
@@ -1058,7 +1060,7 @@ public class Server {
             byte[] bytes = out.toString().getBytes(StandardCharsets.UTF_8);
             outgoingHeaders.set("Cache-Control", "no-cache");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            if (!exchange.getRequestMethod().equalsIgnoreCase("HEAD")) exchange.getResponseBody().write(bytes);
             exchange.close();
         });
         server.createContext("/searchIcon").setHandler(exchange -> {
