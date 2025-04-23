@@ -17,6 +17,7 @@
     "port": 12345,
     "repeater_url_prefix": "https://proxyserver.litten.ca/",
     "archive_org_archives": [
+        "minecraft-iOS",
         "geekbench-3-v-3.0.0",
         "geekbench-v-2.2.8",
         "geekbench-3-3.4.0",
