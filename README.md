@@ -1,6 +1,6 @@
 # Legacy iOS App Finder
 Search iPhoneOS Obscura, and more legacy iOS apps!<br>
-To be refactored in future
+To be refactored in C++ using SQL sometime in the future.
 
 ## How to set up
 TODO<br>
