@@ -288,7 +288,7 @@ public class App {
     public String[] getUrlsForVersion(String version) {
         for (Version v : versions) {
             if (v.version.equals(version)) {
-                return (String[]) Arrays.stream(v.links).map(link -> link.url).toArray();
+                return Arrays.stream(v.links).map(link -> link.url).toArray(String[]::new);
             }
         }
         return new String[]{};

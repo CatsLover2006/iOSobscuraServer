@@ -41,6 +41,7 @@ public class Server {
     private static String donateURL = "";
     private static String repeaterPrefix = "";
     private static String headerTag = "";
+    private static boolean recentUrlUpdate = false;
     private static int port;
     private static ErrorPageCreator errorPages;
     private static final LinkedList<String> featuredApps = new LinkedList<>();
@@ -98,6 +99,11 @@ public class Server {
             donateURL = object.getString("donate_url");
             headerTag = object.getString("header_tags");
             repeaterPrefix = object.getString("repeater_url_prefix");
+            try {
+                recentUrlUpdate = object.getBoolean("recent_url_change");
+            } catch (Exception e) {
+                recentUrlUpdate = false;
+            }
             errorPages = new ErrorPageCreator(headerTag);
             port = object.getInt("port");
             try {
@@ -151,12 +157,17 @@ public class Server {
             }
             boolean debugMode = exchangeURI.toLowerCase().contains("debug");
             StringBuilder out = new StringBuilder();
-            out.append(Templates.generateBasicHeader("iOS Obscura Locator", headerTag))
-                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>iPhoneOS Obscura Locator Homepage</strong></center></div></div>");
+            out.append(Templates.generateBasicHeader("Legacy iOS App Finder", headerTag))
+                    .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Legacy iOS App Finder Homepage</strong></center></div></div>");
             if (debugMode) out.append("<div><div>Debug Mode</div></div>");
             out.append("<div><div><form action=\"");
             if (debugMode) out.append("/debug");
             out.append("/searchPost\"><input type\"text\" name=\"search\" value=\"\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img class=\"search\" src=\"/searchIcon\"></button></form></div></div></fieldset>");
+            if (recentUrlUpdate)
+                out.append("<fieldset style=\"background-color:#fcc\"><a href=\"http://")
+                        .append(serverName).append(exchangeURI)
+                        .append("\"><div><div>The location of this website has changed! The new link is ")
+                        .append(serverName).append("</div></div></a></fieldset>");
             App app;
             if (!featuredApps.isEmpty()) {
                 out.append("<label>Featured Apps</label><fieldset class=\"iconList\">");
@@ -483,7 +494,13 @@ public class Server {
                     .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                     .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
-                    .append("</div></div><div><div>Debug Mode</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset><label>Versions</label><fieldset>");
+                    .append("</div></div><div><div>Debug Mode</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+            if (recentUrlUpdate)
+                out.append("<fieldset style=\"background-color:#fcc\"><a href=\"http://")
+                        .append(serverName).append(exchange.getRequestURI().toString())
+                        .append("\"><div><div>The location of this website has changed! The new link is ")
+                        .append(serverName).append("</div></div></a></fieldset>");
+            out.append("<label>Versions</label><fieldset>");
             String[] versions = app.getSupportedAppVersions(iOS_ver);
             if (versions.length == 0) {
                 out.append("<div><div>No Known Versions</div></div>");
@@ -533,7 +550,13 @@ public class Server {
                     .append(app.getBundleID()).append("\" onerror=\"this.onerror=null;this.src='/getProxiedAppIcon/")
                     .append(app.getBundleID()).append("'\"><strong style=\"padding:.5em 0;line-height:57px\"><center>").append(cutStringTo(app.getName(), 20))
                     .append("</center></strong></div></div><div><div>").append(app.getDeveloper())
-                    .append("</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset><label>Versions</label><fieldset>");
+                    .append("</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+            if (recentUrlUpdate)
+                out.append("<fieldset style=\"background-color:#fcc\"><a href=\"http://")
+                        .append(serverName).append(exchange.getRequestURI().toString())
+                        .append("\"><div><div>The location of this website has changed! The new link is ")
+                        .append(serverName).append("</div></div></a></fieldset>");
+            out.append("<label>Versions</label><fieldset>");
             String[] versions = app.getSupportedAppVersions(iOS_ver);
             if (versions.length == 0) {
                 out.append("<div><div>No Known Versions</div></div>");
@@ -659,6 +682,11 @@ public class Server {
                     .append("</div></div><div><div style=\"overflow:auto\">Version ").append(splitURI[3])
                     .append("<span style=\"float:right\">Requires iOS ").append(app.getCompatibleVersion(splitURI[3]))
                     .append("</span></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+            if (recentUrlUpdate)
+                out.append("<fieldset style=\"background-color:#fcc\"><a href=\"http://")
+                        .append(serverName).append(exchange.getRequestURI().toString())
+                        .append("\"><div><div>The location of this website has changed! The new link is ")
+                        .append(serverName).append("</div></div></a></fieldset>");
             App.VersionLink[] versions = app.getLinksForVersion(splitURI[3]);
             for (int i = 0; i < versions.length; i++) {
                 out.append("<label>#").append(i + 1).append(", ").append(versions[i].getUrl().split("//")[1].split("/")[0]);
@@ -757,6 +785,11 @@ public class Server {
                     .append("</div></div><div><div style=\"overflow:auto\">Version ").append(splitURI[4])
                     .append("<span style=\"float:right\">Requires iOS ").append(app.getCompatibleVersion(splitURI[4]))
                     .append("</span></div></div><div><div>Debug Mode</div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+            if (recentUrlUpdate)
+                out.append("<fieldset style=\"background-color:#fcc\"><a href=\"http://")
+                        .append(serverName).append(exchange.getRequestURI().toString())
+                        .append("\"><div><div>The location of this website has changed! The new link is ")
+                        .append(serverName).append("</div></div></a></fieldset>");
             App.VersionLink[] versions = app.getLinksForVersion(splitURI[4]);
             for (int i = 0; i < versions.length; i++) {
                 out.append("<label>#").append(i + 1).append(", ").append(versions[i].getUrl().split("//")[1].split("/")[0]);
@@ -897,6 +930,11 @@ public class Server {
             out.append(Templates.generateBasicHeader("HTML Sitemap", headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><strong>HTML Sitemap</strong></div></div>");
             out.append("<a href=\"https://").append(serverName).append("/\"><div><div>Homepage</div></div></a></fieldset>");
+            if (recentUrlUpdate)
+                out.append("<fieldset style=\"background-color:#fcc\"><a href=\"http://")
+                        .append(serverName).append(exchange.getRequestURI().toString())
+                        .append("\"><div><div>The location of this website has changed! The new link is ")
+                        .append(serverName).append("</div></div></a></fieldset>");
             for (App app : AppList.searchApps("", iOS_ver)) {
                 out.append("<label>").append(app.getBundleID()).append("</label><fieldset class=\"iconList\"><a href=\"getAppVersions/")
                         .append(app.getBundleID()).append("\"><div><div><img loading=\"lazy\" class=\"appIcon\" src=\"getAppIcon/")
@@ -980,6 +1018,11 @@ public class Server {
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div><div><div>Debug Mode<small style=\"font-size:x-small\"><br>Relevance Cutoff: ")
                     .append(AppList.getSearchRelevanceCutoff(query)).append("</small></div></div><div><div><form action=\"/debug/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
                     .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img class=\"search\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+            if (recentUrlUpdate)
+                out.append("<fieldset style=\"background-color:#fcc\"><a href=\"http://")
+                        .append(serverName).append(exchange.getRequestURI().toString())
+                        .append("\"><div><div>The location of this website has changed! The new link is ")
+                        .append(serverName).append("</div></div></a></fieldset>");
             if (!query.isEmpty()) {
                 out.append("<label>Search Results</label><fieldset class=\"iconList\">");
                 List<AppList.SearchResult> apps = AppList.searchAppsWithWeights(query, iOS_ver);
@@ -1037,6 +1080,11 @@ public class Server {
             out.append(Templates.generateBasicHeader("Search: " + query, headerTag))
                     .append("<body class=\"pinstripe\"><panel><fieldset><div><div><center><strong>Search iPhoneOS Obscura</strong></center></div></div><div><div><form action=\"/searchPost\"><input type\"text\" name=\"search\" value=\"").append(query)
                     .append("\" style=\"-webkit-appearance:none;border-bottom:1px solid #999\" placeholder=\"Search\"><button style=\"float:right;background:none\" type=\"submit\"><img class=\"search\" src=\"/searchIcon\"></button></form></div></div><a href=\"javascript:history.back()\"><div><div>Go Back</div></div></a></fieldset>");
+            if (recentUrlUpdate)
+                out.append("<fieldset style=\"background-color:#fcc\"><a href=\"http://")
+                        .append(serverName).append(exchange.getRequestURI().toString())
+                        .append("\"><div><div>The location of this website has changed! The new link is ")
+                        .append(serverName).append("</div></div></a></fieldset>");
             if (!query.isEmpty()) {
                 out.append("<label>Search Results</label><fieldset class=\"iconList\">");
                 List<App> apps = AppList.searchApps(query, iOS_ver);

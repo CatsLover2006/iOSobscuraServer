@@ -2,7 +2,6 @@ package ca.litten.ios_obscura_server.backend;
 
 import ca.litten.ios_obscura_server.parser.Binary;
 import ca.litten.ios_obscura_server.parser.CPUarch;
-import com.sun.xml.internal.ws.util.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
